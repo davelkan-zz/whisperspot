@@ -25,7 +25,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements LocationListener{
+public class MapsActivity extends FragmentActivity{
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private TextView latituteField;
     private TextView longitudeField;
@@ -90,25 +90,42 @@ public class MapsActivity extends FragmentActivity implements LocationListener{
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
 
-    
+
 
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
         // Get the location manager
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        // Define the criteria how to select the location provider -> use
+
+
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                if(location != null){
+                    Marker newLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
+                    //mylocation.setPosition(new LatLng(location.getLatitude(),location.getLongitude()));
+                    //mylocation.setTitle("IT MOVED!!");
+                    double pointx = location.getLatitude();
+                    double pointy = location.getLongitude();
+                    System.out.println("word");
+                    mMap.addCircle(new CircleOptions()
+                            .center(new LatLng(pointx, pointy))
+                            .radius(25)
+                            .strokeColor(Color.RED)
+                            .fillColor(Color.BLUE));
+                }
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            public void onProviderEnabled(String provider) {}
+
+            public void onProviderDisabled(String provider) {}
+        };
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5, 1, locationListener);
         Location location = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
-        /**
-        if(location != null){
-            double mylat = location.getLatitude();
-            double mylong = location.getLongitude();
-            Marker mylocation = mMap.addMarker(new MarkerOptions().position(new LatLng(mylat, mylong)).title("My Position"));
-        }
-        else{
-            Marker mylocation = mMap.addMarker(new MarkerOptions().position(new LatLng(42.293354, -71.262796)).title("My Room"));
-        }
-**/
+
         Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
         List<Point> BlueLatList = new ArrayList<Point>();
             BlueLatList.add(new Point(42.2929,-71.2615));
@@ -142,9 +159,6 @@ public class MapsActivity extends FragmentActivity implements LocationListener{
                     .fillColor(Color.RED));
         }
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 17));
-
-        onLocationChanged(location);
-
     }
 
     private void inAllyNode(List<Point> nodeList){
@@ -166,31 +180,6 @@ public class MapsActivity extends FragmentActivity implements LocationListener{
     }
 
     private void inEnemyNode(List<Point> nodeList){
-
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        if(location != null){
-            Marker newLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
-            //mylocation.setPosition(new LatLng(location.getLatitude(),location.getLongitude()));
-            //mylocation.setTitle("IT MOVED!!");
-        }
-      }
-
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
 
     }
 
