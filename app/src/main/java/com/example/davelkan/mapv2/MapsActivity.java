@@ -9,6 +9,10 @@ import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.app.Activity;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,25 +26,33 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.lang.reflect.Array;
+import java.math.MathContext;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MapsActivity extends FragmentActivity{
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private TextView latituteField;
-    private TextView longitudeField;
-    private Location location;
     private LocationManager locationManager;
+
+    Button lvmsg;
+    Button tkmsg;
+    Button lvtrp;
+    Button dcptmsg;
+    Button sbmtmsg;
+    Button cnclmsg;
+    EditText message;
+    int mapState = 0;
+    Marker newLocation;
+    Marker myLocation;
+
     //public Marker mylocation = mMap.addMarker(new MarkerOptions());
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        initButtons();
     }
 
 
@@ -95,25 +107,25 @@ public class MapsActivity extends FragmentActivity{
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
+        final List<Point> BlueLatList = new ArrayList<Point>(Arrays.asList(new Point(42.2929,-71.2615),new Point(42.292,-71.2638),new Point(42.29293,-71.262125)));
+        final List<Point> RedLatList = new ArrayList<Point>(Arrays.asList(new Point(42.292,-71.2624),new Point(42.2926, -71.2635),new Point(42.2930325, -71.2619909)));
         // Get the location manager
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
 
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
+                final List<Point> shocked = new ArrayList<Point>(Arrays.asList(new Point(42.29362,-71.263992),new Point(42.293572,-71.263729),new Point(42.293302,-71.263863),new Point(42.293389,-71.263965),new Point(42.293405,-71.264121),new Point(42.293338,-71.264255)));
                 if(location != null){
-                    Marker newLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
-                    //mylocation.setPosition(new LatLng(location.getLatitude(),location.getLongitude()));
-                    //mylocation.setTitle("IT MOVED!!");
-                    double pointx = location.getLatitude();
-                    double pointy = location.getLongitude();
-                    System.out.println("word");
-                    mMap.addCircle(new CircleOptions()
-                            .center(new LatLng(pointx, pointy))
-                            .radius(25)
-                            .strokeColor(Color.RED)
-                            .fillColor(Color.BLUE));
+                    if (newLocation != null) {
+                        newLocation.remove();
+                        if(myLocation != null){myLocation.remove();}
+                    }
+                    newLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
+                    checkEnemyNode(RedLatList, location);
+                    checkAllyNode(BlueLatList, location);
                 }
             }
 
@@ -123,19 +135,10 @@ public class MapsActivity extends FragmentActivity{
 
             public void onProviderDisabled(String provider) {}
         };
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5, 1, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
         Location location = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
 
         Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
-        List<Point> BlueLatList = new ArrayList<Point>();
-            BlueLatList.add(new Point(42.2929,-71.2615));
-            BlueLatList.add(new Point(42.2935,-71.2635));
-            BlueLatList.add(new Point(42.292,-71.2638));
-
-        List<Point> RedLatList = new ArrayList<Point>();
-            RedLatList.add(new Point(42.292,-71.2624));
-            RedLatList.add(new Point(42.2926, -71.263));
-            RedLatList.add(new Point(42.2927, -71.2622));
 
         for (Point aBlueLatList : BlueLatList) {
             double pointx = aBlueLatList.x;
@@ -154,15 +157,17 @@ public class MapsActivity extends FragmentActivity{
             System.out.println("word");
             mMap.addCircle(new CircleOptions()
                     .center(new LatLng(pointx, pointy))
-                    .radius(25)
+                    .radius(10)
                     .strokeColor(Color.BLUE)
                     .fillColor(Color.RED));
         }
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 17));
     }
 
-    private void inAllyNode(List<Point> nodeList){
-        for(int i =0; i< nodeList.size(); i++){
+
+    //check to see if you're in a node
+    private int checkAllyNode(List<Point> nodeList,Location location){
+        for(int i = 0; i < nodeList.size(); i++){
             Point activeNode = nodeList.get(i);
             double radius = 6778.137;//radius of earth in km
             double distLat = (activeNode.x - location.getLatitude())*Math.PI/180;
@@ -171,17 +176,55 @@ public class MapsActivity extends FragmentActivity{
                     Math.cos(location.getLatitude() * Math.PI / 180) * Math.cos(activeNode.x * Math.PI / 180) *
                             Math.sin(distLong/2) * Math.sin(distLong/2);
             double step_b = 2* Math.atan2(Math.sqrt(step_a),Math.sqrt(1-step_a));
-            double step_c = radius * step_b * 1000; //need to scale it to meters
+            double step_c = radius * step_b * 1000; //need to scale it to meters*/
 
-            if(step_c < 25){
-                //you're in the node
+            if (step_c < 25  && mapState < 2) {
+                System.out.print("in Range");
+                lvmsg.setVisibility(View.VISIBLE);
+                tkmsg.setVisibility(View.VISIBLE);
+                mapState = 1;
+                return i;
+            }
+            else{
+                System.out.print("not in range");
+                mapState = 0;
+                makeInvisible();
+
+            }
+
+        }
+        return -1;
+    }
+
+    private int checkEnemyNode(List<Point> nodeList, Location location){
+        if(!nodeList.isEmpty()) for (int i = 0; i < nodeList.size(); i++) {
+            Point activeNode = nodeList.get(i);
+            double radius = 6778.137;//radius of earth in km
+            double distLat = (activeNode.x - location.getLatitude()) * Math.PI / 180;
+            double distLong = (activeNode.y - location.getLongitude()) * Math.PI / 180;
+            double step_a = Math.sin(distLat / 2) * Math.sin(distLat / 2) +
+            Math.cos(location.getLatitude() * Math.PI / 180) * Math.cos(activeNode.x * Math.PI / 180) *
+            Math.sin(distLong / 2) * Math.sin(distLong / 2);
+            double step_b = 2 * Math.atan2(Math.sqrt(step_a), Math.sqrt(1 - step_a));
+            double step_c = radius * step_b * 1000; //need to scale it to meters
+            System.out.print(step_c);
+
+            if (step_c < 25 && mapState < 2) {
+                System.out.print("in Range");
+                lvtrp.setVisibility(View.VISIBLE);
+                dcptmsg.setVisibility(View.VISIBLE);
+                mapState = 1;
+                return i;
+            }
+            else{
+                System.out.print("not in range");
+                mapState = 0;
+                makeInvisible();
             }
         }
+        return -1;
     }
 
-    private void inEnemyNode(List<Point> nodeList){
-
-    }
 
     public class Point{
         double x;
@@ -191,6 +234,76 @@ public class MapsActivity extends FragmentActivity{
             this.y = y;
         }
     }
+
+    public class Node{
+        int tag;
+        String colour;
+        Point center;
+        public Node(){
+            this.center = center;
+            this.colour = colour;
+            this.tag = tag;
+        }
+    }
+    public void initButtons(){
+        lvmsg = (Button) findViewById(R.id.lvmsg);
+        tkmsg = (Button) findViewById(R.id.tkmsg);
+        lvtrp = (Button) findViewById(R.id.lvtrp);
+        dcptmsg = (Button) findViewById(R.id.dcptmsg);
+        message = (EditText) findViewById(R.id.message);
+        sbmtmsg = (Button) findViewById(R.id.sbmtmsg);
+        cnclmsg = (Button) findViewById(R.id.cnclmsg);
+        lvmsg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cnclmsg.setVisibility(View.VISIBLE);
+                sbmtmsg.setVisibility(View.VISIBLE);
+                message.setVisibility(View.VISIBLE);
+                tkmsg.setVisibility(View.INVISIBLE);
+                lvmsg.setVisibility(View.INVISIBLE);
+            }
+        });
+        tkmsg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        dcptmsg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        lvtrp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        sbmtmsg.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                message.setVisibility(View.INVISIBLE);
+                sbmtmsg.setVisibility(View.INVISIBLE);
+            }
+        });
+        cnclmsg.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                message.setVisibility(View.INVISIBLE);
+                sbmtmsg.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+    public void makeInvisible(){
+        lvtrp.setVisibility(View.INVISIBLE);
+        dcptmsg.setVisibility(View.INVISIBLE);
+        message.setVisibility(View.INVISIBLE);
+        sbmtmsg.setVisibility(View.INVISIBLE);
+        cnclmsg.setVisibility(View.INVISIBLE);
+    }
+
     private void updatepoints(){
         System.out.print("words");
     }

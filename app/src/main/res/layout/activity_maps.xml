@@ -1,3 +1,10 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MapActivity" >
+
+
 <fragment xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -5,3 +12,62 @@
     android:id="@+id/map"
     tools:context=".MapsActivity"
     android:name="com.google.android.gms.maps.SupportMapFragment"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/lvtrp"
+        android:visibility="invisible"
+        android:text="Leave Trap"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Decrypt Message"
+        android:id="@+id/dcptmsg"
+        android:visibility="invisible"
+        android:layout_gravity="right|top" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Take Message"
+        android:id="@+id/tkmsg"
+        android:visibility="invisible"
+        android:layout_gravity="left|top" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Leave Message"
+        android:id="@+id/lvmsg"
+        android:visibility="invisible"
+        android:layout_gravity="right|top" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        android:id="@+id/sbmtmsg"
+        android:visibility="invisible"
+        android:layout_gravity="left|top" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Abort"
+        android:id="@+id/cnclmsg"
+        android:visibility="invisible"
+        android:layout_gravity="right|top" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="255dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Enter Message Here"
+        android:id="@+id/message"
+        android:visibility="invisible"
+        android:layout_gravity="center_horizontal|bottom" />
+
+
+</FrameLayout>
