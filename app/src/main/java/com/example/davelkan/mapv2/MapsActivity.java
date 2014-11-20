@@ -1,6 +1,7 @@
 package com.example.davelkan.mapv2;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
@@ -16,6 +17,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -29,11 +34,14 @@ import java.lang.reflect.Array;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class MapsActivity extends FragmentActivity{
+    private String TAG = "MapsActivity";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
+    private BLEScanner scanner;
 
     Button lvmsg;
     Button tkmsg;
@@ -54,6 +62,19 @@ public class MapsActivity extends FragmentActivity{
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
         initButtons();
+
+        Firebase.setAndroidContext(this);
+        runScanner();
+    }
+
+    public void runScanner() {
+        scanner = new BLEScanner(this);
+        scanner.scanBLE("78:A5:04:8C:25:DF");
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        scanner.onActivityResult(requestCode, resultCode, data);
     }
 
 
@@ -75,7 +96,8 @@ public class MapsActivity extends FragmentActivity{
      * <p>
      * If it isn't installed {@link SupportMapFragment} (and
      * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
-     * install/update the Google Play services APK on their device.
+     * install/update the Google Play services APK
+     * on their device.
      * <p>
      * A user can return to this FragmentActivity after following the prompt and correctly
      * installing/updating/enabling the Google Play services. Since the FragmentActivity may not
@@ -139,7 +161,12 @@ public class MapsActivity extends FragmentActivity{
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
         Location location = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
 
-        Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
+        if (location != null) {
+            Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), zoom));
+        } else {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(42.2929, -71.2615), zoom));
+        }
 
         for (Point aBlueLatList : BlueLatList) {
             double pointx = aBlueLatList.x;
@@ -162,7 +189,6 @@ public class MapsActivity extends FragmentActivity{
                     .strokeColor(Color.BLUE)
                     .fillColor(Color.RED));
         }
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), zoom));
     }
 
 
