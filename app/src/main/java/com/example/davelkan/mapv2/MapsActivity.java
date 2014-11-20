@@ -45,6 +45,7 @@ public class MapsActivity extends FragmentActivity{
     int mapState = 0;
     Marker newLocation;
     Marker myLocation;
+    int zoom = 17;
 
     //public Marker mylocation = mMap.addMarker(new MarkerOptions());
     @Override
@@ -107,7 +108,7 @@ public class MapsActivity extends FragmentActivity{
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
-        final List<Point> BlueLatList = new ArrayList<Point>(Arrays.asList(new Point(42.2929,-71.2615),new Point(42.292,-71.2638),new Point(42.29293,-71.262125)));
+        final List<Point> BlueLatList = new ArrayList<Point>(Arrays.asList(new Point(42.2929,-71.2615),new Point(42.292,-71.2638),new Point(42.29293,-71.262125), new Point(42.293627,-71.264513)));
         final List<Point> RedLatList = new ArrayList<Point>(Arrays.asList(new Point(42.292,-71.2624),new Point(42.2926, -71.2635),new Point(42.2930325, -71.2619909)));
         // Get the location manager
 
@@ -117,7 +118,7 @@ public class MapsActivity extends FragmentActivity{
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
-                final List<Point> shocked = new ArrayList<Point>(Arrays.asList(new Point(42.29362,-71.263992),new Point(42.293572,-71.263729),new Point(42.293302,-71.263863),new Point(42.293389,-71.263965),new Point(42.293405,-71.264121),new Point(42.293338,-71.264255)));
+                //final List<Point> shocked = new ArrayList<Point>(Arrays.asList(new Point(42.29362,-71.263992),new Point(42.293572,-71.263729),new Point(42.293302,-71.263863),new Point(42.293389,-71.263965),new Point(42.293405,-71.264121),new Point(42.293338,-71.264255)));
                 if(location != null){
                     if (newLocation != null) {
                         newLocation.remove();
@@ -161,7 +162,7 @@ public class MapsActivity extends FragmentActivity{
                     .strokeColor(Color.BLUE)
                     .fillColor(Color.RED));
         }
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 17));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), zoom));
     }
 
 
@@ -178,12 +179,18 @@ public class MapsActivity extends FragmentActivity{
             double step_b = 2* Math.atan2(Math.sqrt(step_a),Math.sqrt(1-step_a));
             double step_c = radius * step_b * 1000; //need to scale it to meters*/
 
-            if (step_c < 25  && mapState < 2) {
+            if (step_c < 25  && sbmtmsg.getVisibility() == View.INVISIBLE) {
                 System.out.print("in Range");
                 lvmsg.setVisibility(View.VISIBLE);
                 tkmsg.setVisibility(View.VISIBLE);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.x, activeNode.y), 19));
                 mapState = 1;
                 return i;
+            }
+            else if(step_c < 25 && lvmsg.getVisibility() == View.INVISIBLE) {
+                lvmsg.setVisibility(View.INVISIBLE);
+                sbmtmsg.setVisibility(View.INVISIBLE);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.x - 0.00025, activeNode.y), 19));
             }
             else{
                 System.out.print("not in range");
@@ -261,6 +268,7 @@ public class MapsActivity extends FragmentActivity{
                 message.setVisibility(View.VISIBLE);
                 tkmsg.setVisibility(View.INVISIBLE);
                 lvmsg.setVisibility(View.INVISIBLE);
+                mapState = 2;
             }
         });
         tkmsg.setOnClickListener(new View.OnClickListener() {
@@ -286,6 +294,8 @@ public class MapsActivity extends FragmentActivity{
             public void onClick(View v) {
                 message.setVisibility(View.INVISIBLE);
                 sbmtmsg.setVisibility(View.INVISIBLE);
+                cnclmsg.setVisibility(View.INVISIBLE);
+                mapState = 1;
             }
         });
         cnclmsg.setOnClickListener(new View.OnClickListener(){
@@ -293,6 +303,8 @@ public class MapsActivity extends FragmentActivity{
             public void onClick(View v) {
                 message.setVisibility(View.INVISIBLE);
                 sbmtmsg.setVisibility(View.INVISIBLE);
+                cnclmsg.setVisibility(View.INVISIBLE);
+
             }
         });
     }
