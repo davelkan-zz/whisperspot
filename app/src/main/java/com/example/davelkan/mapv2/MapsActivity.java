@@ -159,7 +159,7 @@ public class MapsActivity extends FragmentActivity{
             public void onProviderDisabled(String provider) {}
         };
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        Location location = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
         if (location != null) {
             Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
