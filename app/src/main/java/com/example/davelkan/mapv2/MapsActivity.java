@@ -268,16 +268,25 @@ public class MapsActivity extends FragmentActivity{
         }
     }
 
-    public class Node{
+    public static class Node {
         int tag;
+        String device;
         String colour;
         Point center;
-        public Node(){
-            this.center = center;
-            this.colour = colour;
+        public Node(int tag, String device, String colour, Point center) {
             this.tag = tag;
+            this.device = device;
+            this.colour = colour;
+            this.center = center;
         }
+        public Node(FirebaseUtils.RawNode rawNode, String device) {
+            this.device = device;
+            this.colour = rawNode.color;
+            this.center = new Point(rawNode.lat, rawNode.lon);
+        }
+        public Node() { }
     }
+
     public void initButtons(){
         lvmsg = (Button) findViewById(R.id.lvmsg);
         tkmsg = (Button) findViewById(R.id.tkmsg);
