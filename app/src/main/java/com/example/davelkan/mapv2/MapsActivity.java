@@ -138,9 +138,10 @@ public class MapsActivity extends FragmentActivity{
         };
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
         Location location = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
-
-        Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
-
+        if (myLocation == null) {
+            Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), zoom));
+        }
         for (Point aBlueLatList : BlueLatList) {
             double pointx = aBlueLatList.x;
             double pointy = aBlueLatList.y;
@@ -162,7 +163,6 @@ public class MapsActivity extends FragmentActivity{
                     .strokeColor(Color.BLUE)
                     .fillColor(Color.RED));
         }
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), zoom));
     }
 
 
