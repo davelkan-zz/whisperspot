@@ -7,6 +7,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.app.Activity;
@@ -39,6 +40,7 @@ import java.util.List;
 
 public class MapsActivity extends FragmentActivity{
     private String TAG = "MapsActivity";
+    public String APP_NAME = "Whisperspot";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private BLEScanner scanner;
@@ -106,6 +108,15 @@ public class MapsActivity extends FragmentActivity{
      * method in {@link #onResume()} to guarantee that it will be called.
      */
     private void setUpMapIfNeeded() {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if(!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER )) {
+            Intent myIntent = new Intent( Settings.ACTION_LOCATION_SOURCE_SETTINGS );
+            Toast.makeText(this, "Please enable GPS for " + APP_NAME + " to work properly.", Toast.LENGTH_LONG).show();
+            startActivity(myIntent);
+            return;
+        }
+
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
@@ -125,17 +136,11 @@ public class MapsActivity extends FragmentActivity{
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
 
-
-
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
         final List<Point> BlueLatList = new ArrayList<Point>(Arrays.asList(new Point(42.2929,-71.2615),new Point(42.292,-71.2638),new Point(42.29293,-71.262125), new Point(42.293627,-71.264513)));
         final List<Point> RedLatList = new ArrayList<Point>(Arrays.asList(new Point(42.292,-71.2624),new Point(42.2926, -71.2635),new Point(42.2930325, -71.2619909)));
-        // Get the location manager
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
 
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
