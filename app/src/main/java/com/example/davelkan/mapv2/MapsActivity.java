@@ -41,11 +41,11 @@ public class MapsActivity extends FragmentActivity {
     private String enemyColor = "Red";
     private Node activeNode;
 
-    Button lvmsg;
+    Button leave_message;
     Button tkmsg;
     Button lvtrp;
     Button dcptmsg;
-    Button sbmtmsg;
+    Button submit_message;
     Button cnclmsg;
     EditText message;
     int mapState = 0;
@@ -192,7 +192,7 @@ public class MapsActivity extends FragmentActivity {
             boolean isClose = getIsClose(activeNode.center, location);
             if (isClose) { // found a node
                 if (mapState < 2) { //issue commands based on mapState
-                    lvmsg.setVisibility(View.VISIBLE);
+                    leave_message.setVisibility(View.VISIBLE);
                     tkmsg.setVisibility(View.VISIBLE);
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.center.lat, activeNode.center.lon), 19));
                     mapState = 1;
@@ -223,21 +223,21 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void initButtons(){
-        lvmsg = (Button) findViewById(R.id.lvmsg);
+        leave_message = (Button) findViewById(R.id.lvmsg);
         tkmsg = (Button) findViewById(R.id.tkmsg);
         lvtrp = (Button) findViewById(R.id.lvtrp);
         dcptmsg = (Button) findViewById(R.id.dcptmsg);
         message = (EditText) findViewById(R.id.message);
-        sbmtmsg = (Button) findViewById(R.id.sbmtmsg);
+        submit_message = (Button) findViewById(R.id.sbmtmsg);
         cnclmsg = (Button) findViewById(R.id.cnclmsg);
-        lvmsg.setOnClickListener(new View.OnClickListener() {
+        leave_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 cnclmsg.setVisibility(View.VISIBLE);
-                sbmtmsg.setVisibility(View.VISIBLE);
+                submit_message.setVisibility(View.VISIBLE);
                 message.setVisibility(View.VISIBLE);
                 tkmsg.setVisibility(View.INVISIBLE);
-                lvmsg.setVisibility(View.INVISIBLE);
+                leave_message.setVisibility(View.INVISIBLE);
                 mapState = 2;
                 zoomBelowNode();
             }
@@ -246,7 +246,7 @@ public class MapsActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 tkmsg.setVisibility(View.INVISIBLE);
-                lvmsg.setVisibility(View.INVISIBLE);
+                leave_message.setVisibility(View.INVISIBLE);
                 mapState = 2;
             }
         });
@@ -262,11 +262,14 @@ public class MapsActivity extends FragmentActivity {
 
             }
         });
-        sbmtmsg.setOnClickListener(new View.OnClickListener(){
+        submit_message.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                String submit = message.getText().toString();
+                //TODO: change username and deviceID to real values
+                (new FirebaseUtils()).sendMessage(submit, "example_user", "78:A5:04:8C:25:DF");
                 message.setVisibility(View.INVISIBLE);
-                sbmtmsg.setVisibility(View.INVISIBLE);
+                submit_message.setVisibility(View.INVISIBLE);
                 cnclmsg.setVisibility(View.INVISIBLE);
                 mapState = 1;
             }
@@ -275,7 +278,7 @@ public class MapsActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 message.setVisibility(View.INVISIBLE);
-                sbmtmsg.setVisibility(View.INVISIBLE);
+                submit_message.setVisibility(View.INVISIBLE);
                 cnclmsg.setVisibility(View.INVISIBLE);
 
             }
@@ -285,7 +288,7 @@ public class MapsActivity extends FragmentActivity {
         lvtrp.setVisibility(View.INVISIBLE);
         dcptmsg.setVisibility(View.INVISIBLE);
         message.setVisibility(View.INVISIBLE);
-        sbmtmsg.setVisibility(View.INVISIBLE);
+        submit_message.setVisibility(View.INVISIBLE);
         cnclmsg.setVisibility(View.INVISIBLE);
     }
 

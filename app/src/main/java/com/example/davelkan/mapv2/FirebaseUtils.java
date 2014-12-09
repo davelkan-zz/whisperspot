@@ -3,7 +3,6 @@ package com.example.davelkan.mapv2;
 /**
  * Created by mwismer on 11/6/14.
  */
-import android.util.Log;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -12,6 +11,7 @@ import com.firebase.client.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 public class FirebaseUtils {
@@ -24,10 +24,18 @@ public class FirebaseUtils {
     }
 
     public void pushUUIDInfo(String deviceAddress, Map<String, byte[]> valueMap) {
-        String timeStamp = new SimpleDateFormat("yyyy:MM:dd-HH:mm:ss").format(new Date());
-        Firebase currentDevice = new Firebase(url).child("devices").child(deviceAddress).child(timeStamp);
+        Firebase currentDevice = new Firebase(url).child("devices").child(deviceAddress).child(timestamp());
         currentDevice.child("values").setValue(valueMap);
         currentDevice.child("UUIDs").setValue(valueMap.keySet());
+    }
+
+    public void sendMessage(String messageText, String username, String deviceID) {
+        Firebase deviceMessages = (new Firebase(url)).child("messages").child(deviceID);
+        HashMap<String, String> message = new HashMap<String, String>();
+        message.put("username", username);
+        message.put("text", messageText);
+        message.put("timestamp", timestamp());
+        deviceMessages.push().setValue(message);
     }
 
     public void populateNodes(final MapsActivity activity) {
@@ -45,6 +53,11 @@ public class FirebaseUtils {
             public void onCancelled(FirebaseError error) {
             }
         });
+    }
+
+    private String timestamp() {
+        return new SimpleDateFormat("yyyy:MM:dd-HH:mm:ss").format(new Date());
+
     }
 
     //    pattern for Firebase objects
