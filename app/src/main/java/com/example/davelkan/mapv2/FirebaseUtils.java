@@ -5,7 +5,6 @@ package com.example.davelkan.mapv2;
  */
 
 import android.widget.TextView;
-import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -24,15 +23,17 @@ public class FirebaseUtils {
     public FirebaseUtils() {
         firebase = new Firebase(url);
     }
-
     public void pushUUIDInfo(String deviceAddress, Map<String, byte[]> valueMap) {
-        Firebase currentDevice = new Firebase(url).child("devices").child(deviceAddress).child(timestamp());
+        Firebase currentDevice = new Firebase(url).child("devices")
+                                                  .child(deviceAddress)
+                                                  .child(timestamp());
         currentDevice.child("values").setValue(valueMap);
         currentDevice.child("UUIDs").setValue(valueMap.keySet());
     }
 
     public void sendMessage(String messageText, String username, String deviceID) {
-        Firebase deviceMessages = (new Firebase(url)).child("messages").child(deviceID);
+        Firebase deviceMessages = (new Firebase(url)).child("messages")
+                                                     .child(deviceID);
         HashMap<String, String> message = new HashMap<String, String>();
         message.put("username", username);
         message.put("text", messageText);
@@ -64,6 +65,7 @@ public class FirebaseUtils {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 HashMap<String, HashMap<String, String>> messages;
                 messages = (HashMap<String, HashMap<String, String>>) dataSnapshot.getValue();
+                //TODO: Display username and timestamp, pick which message better
                 text.setText(messages.values().iterator().next().get("text"));
             }
 
