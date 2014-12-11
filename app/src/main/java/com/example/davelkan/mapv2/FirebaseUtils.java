@@ -4,6 +4,8 @@ package com.example.davelkan.mapv2;
  * Created by mwismer on 11/6/14.
  */
 
+import android.widget.TextView;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -51,6 +53,23 @@ public class FirebaseUtils {
 
             @Override
             public void onCancelled(FirebaseError error) {
+            }
+        });
+    }
+
+    public void displayMostRecentMessage(String deviceID, final TextView text) {
+        Firebase deviceMessages = (new Firebase(url)).child("messages").child(deviceID);
+        deviceMessages.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                HashMap<String, HashMap<String, String>> messages;
+                messages = (HashMap<String, HashMap<String, String>>) dataSnapshot.getValue();
+                text.setText(messages.values().iterator().next().get("text"));
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
             }
         });
     }

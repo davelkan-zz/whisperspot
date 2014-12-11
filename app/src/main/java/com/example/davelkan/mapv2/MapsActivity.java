@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
@@ -42,11 +43,12 @@ public class MapsActivity extends FragmentActivity {
     private Node activeNode;
 
     Button leave_message;
-    Button tkmsg;
+    Button take_message;
     Button lvtrp;
     Button dcptmsg;
     Button submit_message;
     Button cnclmsg;
+    TextView display_message;
     EditText message;
     int mapState = 0;
     Marker newLocation;
@@ -193,7 +195,7 @@ public class MapsActivity extends FragmentActivity {
             if (isClose) { // found a node
                 if (mapState < 2) { //issue commands based on mapState
                     leave_message.setVisibility(View.VISIBLE);
-                    tkmsg.setVisibility(View.VISIBLE);
+                    take_message.setVisibility(View.VISIBLE);
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.center.lat, activeNode.center.lon), 19));
                     mapState = 1;
                 }
@@ -224,10 +226,11 @@ public class MapsActivity extends FragmentActivity {
 
     public void initButtons(){
         leave_message = (Button) findViewById(R.id.lvmsg);
-        tkmsg = (Button) findViewById(R.id.tkmsg);
+        take_message = (Button) findViewById(R.id.tkmsg);
         lvtrp = (Button) findViewById(R.id.lvtrp);
         dcptmsg = (Button) findViewById(R.id.dcptmsg);
         message = (EditText) findViewById(R.id.message);
+        display_message = (TextView) findViewById(R.id.message_display);
         submit_message = (Button) findViewById(R.id.sbmtmsg);
         cnclmsg = (Button) findViewById(R.id.cnclmsg);
         leave_message.setOnClickListener(new View.OnClickListener() {
@@ -236,18 +239,21 @@ public class MapsActivity extends FragmentActivity {
                 cnclmsg.setVisibility(View.VISIBLE);
                 submit_message.setVisibility(View.VISIBLE);
                 message.setVisibility(View.VISIBLE);
-                tkmsg.setVisibility(View.INVISIBLE);
+                take_message.setVisibility(View.INVISIBLE);
                 leave_message.setVisibility(View.INVISIBLE);
                 mapState = 2;
                 zoomBelowNode();
             }
         });
-        tkmsg.setOnClickListener(new View.OnClickListener() {
+        take_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                tkmsg.setVisibility(View.INVISIBLE);
+                take_message.setVisibility(View.INVISIBLE);
                 leave_message.setVisibility(View.INVISIBLE);
                 mapState = 2;
+                display_message.setText("");
+                display_message.setVisibility(View.VISIBLE);
+                (new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
             }
         });
         dcptmsg.setOnClickListener(new View.OnClickListener() {
