@@ -51,7 +51,6 @@ public class MapsActivity extends FragmentActivity {
     TextView display_message;
     EditText message;
     int mapState = 0;
-    Marker newLocation;
     Marker myLocation;
     int zoom = 17;
 
@@ -144,11 +143,10 @@ public class MapsActivity extends FragmentActivity {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 if(location != null){
-                    if (newLocation != null) {
-                        newLocation.remove();
-                        if (myLocation != null) {myLocation.remove();}
+                    if (myLocation != null) {
+                        myLocation.remove();
                     }
-                    newLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
+                    myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
                     Node foundNode = checkAllyProximity(location);
                     if (foundNode == null) { foundNode = checkEnemyProximity(location); }
                     if (foundNode == null) { // didn't find a node
