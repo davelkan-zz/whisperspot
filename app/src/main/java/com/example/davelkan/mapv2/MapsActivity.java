@@ -44,10 +44,10 @@ public class MapsActivity extends FragmentActivity {
 
     Button leave_message;
     Button take_message;
-    Button lvtrp;
-    Button dcptmsg;
+    Button leave_trap;
+    Button decrypt_message;
     Button submit_message;
-    Button cnclmsg;
+    Button cancel_message;
     TextView display_message;
     EditText message;
     int mapState = 0;
@@ -88,10 +88,6 @@ public class MapsActivity extends FragmentActivity {
         setUpMapIfNeeded();
         updatepoints();
     }
-
-
-
-
 
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
@@ -208,8 +204,8 @@ public class MapsActivity extends FragmentActivity {
 
             if (isClose && mapState < 2) {
                 System.out.print("in Range");
-                lvtrp.setVisibility(View.VISIBLE);
-                dcptmsg.setVisibility(View.VISIBLE);
+                leave_trap.setVisibility(View.VISIBLE);
+                decrypt_message.setVisibility(View.VISIBLE);
                 mapState = 1;
                 return activeNode;
             }
@@ -224,16 +220,16 @@ public class MapsActivity extends FragmentActivity {
     public void initButtons(){
         leave_message = (Button) findViewById(R.id.lvmsg);
         take_message = (Button) findViewById(R.id.tkmsg);
-        lvtrp = (Button) findViewById(R.id.lvtrp);
-        dcptmsg = (Button) findViewById(R.id.dcptmsg);
+        leave_trap = (Button) findViewById(R.id.lvtrp);
+        decrypt_message = (Button) findViewById(R.id.dcptmsg);
         message = (EditText) findViewById(R.id.message);
         display_message = (TextView) findViewById(R.id.message_display);
         submit_message = (Button) findViewById(R.id.sbmtmsg);
-        cnclmsg = (Button) findViewById(R.id.cnclmsg);
+        cancel_message = (Button) findViewById(R.id.cnclmsg);
         leave_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cnclmsg.setVisibility(View.VISIBLE);
+                cancel_message.setVisibility(View.VISIBLE);
                 submit_message.setVisibility(View.VISIBLE);
                 message.setVisibility(View.VISIBLE);
                 take_message.setVisibility(View.INVISIBLE);
@@ -253,13 +249,13 @@ public class MapsActivity extends FragmentActivity {
                 (new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
             }
         });
-        dcptmsg.setOnClickListener(new View.OnClickListener() {
+        decrypt_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
             }
         });
-        lvtrp.setOnClickListener(new View.OnClickListener() {
+        leave_trap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -273,26 +269,26 @@ public class MapsActivity extends FragmentActivity {
                 (new FirebaseUtils()).sendMessage(submit, "example_user", "78:A5:04:8C:25:DF");
                 message.setVisibility(View.INVISIBLE);
                 submit_message.setVisibility(View.INVISIBLE);
-                cnclmsg.setVisibility(View.INVISIBLE);
+                cancel_message.setVisibility(View.INVISIBLE);
                 mapState = 1;
             }
         });
-        cnclmsg.setOnClickListener(new View.OnClickListener(){
+        cancel_message.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 message.setVisibility(View.INVISIBLE);
                 submit_message.setVisibility(View.INVISIBLE);
-                cnclmsg.setVisibility(View.INVISIBLE);
+                cancel_message.setVisibility(View.INVISIBLE);
 
             }
         });
     }
     public void makeInvisible(){
-        lvtrp.setVisibility(View.INVISIBLE);
-        dcptmsg.setVisibility(View.INVISIBLE);
+        leave_trap.setVisibility(View.INVISIBLE);
+        decrypt_message.setVisibility(View.INVISIBLE);
         message.setVisibility(View.INVISIBLE);
         submit_message.setVisibility(View.INVISIBLE);
-        cnclmsg.setVisibility(View.INVISIBLE);
+        cancel_message.setVisibility(View.INVISIBLE);
     }
 
     private void updatepoints(){
@@ -329,19 +325,11 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public boolean getIsClose(LatLng start, Location location) {
-        double radius = 6778.137;//radius of earth in km
-        double distLat = (start.latitude - location.getLatitude())*Math.PI/180;
-        double distLong = (start.longitude - location.getLongitude())*Math.PI/180;
-        double step_a = Math.sin(distLat/2) * Math.sin(distLat/2) +
-                Math.cos(location.getLatitude() * Math.PI / 180) * Math.cos(start.latitude * Math.PI / 180) *
-                        Math.sin(distLong/2) * Math.sin(distLong/2);
-        double step_b = 2* Math.atan2(Math.sqrt(step_a),Math.sqrt(1-step_a));
-        double step_c = radius * step_b * 1000; //need to scale it to meters*/
-        if (step_c < 25) {
-            return true;
-        } else{
-            return false;
-        }
+        Location startLoc = new Location(location);
+        startLoc.setLatitude(start.latitude);
+        startLoc.setLongitude(start.longitude);
+
+        return (startLoc.distanceTo(location) < 25);
     }
 
     public FirebaseUtils getFirebaseUtils() {
