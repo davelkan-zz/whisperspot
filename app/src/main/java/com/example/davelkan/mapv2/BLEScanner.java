@@ -21,7 +21,7 @@ public final class BLEScanner implements PreferenceManager.OnActivityResultListe
     private String deviceName;
     private BluetoothDevice device = null;
     private BluetoothAdapter mBLEAdapter = null;
-    private Activity activity;
+    private MapsActivity activity;
     private static String TAG = "BLEScanner";
 
     private BluetoothAdapter.LeScanCallback mBLECallback = new BluetoothAdapter.LeScanCallback() {
@@ -36,7 +36,7 @@ public final class BLEScanner implements PreferenceManager.OnActivityResultListe
         }
     };
 
-    public BLEScanner(Activity currentActivity) {
+    public BLEScanner(MapsActivity currentActivity) {
         activity = currentActivity;
     }
 
@@ -72,7 +72,7 @@ public final class BLEScanner implements PreferenceManager.OnActivityResultListe
                 if (device == null) {
                     Log.d(TAG, "No devices");
                 } else {
-                    device.connectGatt(activity, false, new BLEFinderCallback(device));
+                    device.connectGatt(activity, false, new BLEFinderCallback(device, activity.getFirebaseUtils()));
                 }
             }
         };

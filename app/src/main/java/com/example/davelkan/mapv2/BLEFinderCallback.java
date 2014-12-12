@@ -26,10 +26,14 @@ public class BLEFinderCallback extends BluetoothGattCallback {
     private boolean success = true;
     private String TAG = "BLEFinderCallback";
     private String deviceAddress;
+    private FirebaseUtils firebaseUtils;
 
     private HashMap<String, byte[]> valueMap = new HashMap<String, byte[]>();
 
-    public BLEFinderCallback(BluetoothDevice device) { deviceAddress = device.getAddress(); }
+    public BLEFinderCallback(BluetoothDevice device, FirebaseUtils firebaseUtils) {
+        deviceAddress = device.getAddress();
+        this.firebaseUtils = firebaseUtils;
+    }
 
     // Client connection state has changed
     @Override
@@ -143,7 +147,7 @@ public class BLEFinderCallback extends BluetoothGattCallback {
             if (success) { break; }
         }
         if (infoToGet.isEmpty()) {
-            new FirebaseUtils().pushUUIDInfo(deviceAddress, valueMap);
+            firebaseUtils.pushUUIDInfo(deviceAddress, valueMap);
             bulkLog();
         }
     }

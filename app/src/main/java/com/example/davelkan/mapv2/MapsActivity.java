@@ -3,47 +3,43 @@ package com.example.davelkan.mapv2;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.Circle;
+
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.lang.reflect.Array;
-import java.math.MathContext;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity{
+public class MapsActivity extends FragmentActivity {
     private String TAG = "MapsActivity";
     public String APP_NAME = "Whisperspot";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private BLEScanner scanner;
+    private FirebaseUtils firebaseUtils;
+    private HashMap<String, ArrayList<Node>> nodes = new HashMap<String, ArrayList<Node>>();
+    private String allyColor = "Blue";
+    private String enemyColor = "Red";
+    private Node activeNode;
 
     Button lvmsg;
     Button tkmsg;
@@ -62,11 +58,16 @@ public class MapsActivity extends FragmentActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        Firebase.setAndroidContext(this);
+        pullFromFirebase();
         setUpMapIfNeeded();
         initButtons();
-
-        Firebase.setAndroidContext(this);
         runScanner();
+    }
+
+    private void pullFromFirebase() {
+        firebaseUtils = new FirebaseUtils();
+        firebaseUtils.populateNodes(this);
     }
 
     public void runScanner() {
@@ -135,12 +136,15 @@ public class MapsActivity extends FragmentActivity{
      * <p>
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
-
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
-        final List<Point> BlueLatList = new ArrayList<Point>(Arrays.asList(new Point(42.2929,-71.2615),new Point(42.292,-71.2638),new Point(42.29293,-71.262125), new Point(42.293627,-71.264513)));
-        final List<Point> RedLatList = new ArrayList<Point>(Arrays.asList(new Point(42.292,-71.2624),new Point(42.2926, -71.2635),new Point(42.2930325, -71.2619909)));
+
+//        final List<Point> BlueLatList = new ArrayList<Point>(Arrays.asList(new Point(42.2929,-71.2615),new Point(42.292,-71.2638),new Point(42.29293,-71.262125), new Point(42.293627,-71.264513)));
+//        final List<Point> RedLatList = new ArrayList<Point>(Arrays.asList(new Point(42.292,-71.2624),new Point(42.2926, -71.2635),new Point(42.2930325, -71.2619909)));
+        // Get the location manager
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
@@ -149,11 +153,17 @@ public class MapsActivity extends FragmentActivity{
                 if(location != null){
                     if (newLocation != null) {
                         newLocation.remove();
-                        if(myLocation != null){myLocation.remove();}
+                        if(myLocation != null) {myLocation.remove();}
                     }
                     newLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
-                    checkEnemyNode(RedLatList, location);
-                    checkAllyNode(BlueLatList, location);
+                    Node foundNode = checkAllyProximity(location);
+                    if (foundNode == null) { foundNode = checkEnemyProximity(location); }
+                    if (foundNode == null) { // didn't find a node
+                        mapState = 0;
+                        makeInvisible();
+                    } else { // found a node
+                        activeNode = foundNode;
+                    }
                 }
             }
 
@@ -164,131 +174,52 @@ public class MapsActivity extends FragmentActivity{
             public void onProviderDisabled(String provider) {}
         };
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
         if (location != null) {
             Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), zoom));
-        } else {
+        } else { //this is just so it zooms in on Olin even if it finds nothing
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(42.2929, -71.2615), zoom));
-        }
-
-        for (Point aBlueLatList : BlueLatList) {
-            double pointx = aBlueLatList.x;
-            double pointy = aBlueLatList.y;
-            System.out.println("word");
-            mMap.addCircle(new CircleOptions()
-                    .center(new LatLng(pointx, pointy))
-                    .radius(25)
-                    .strokeColor(Color.RED)
-                    .fillColor(Color.BLUE));
-        }
-
-        for (Point aRedLatList : RedLatList) {
-            double pointx = aRedLatList.x;
-            double pointy = aRedLatList.y;
-            System.out.println("word");
-            mMap.addCircle(new CircleOptions()
-                    .center(new LatLng(pointx, pointy))
-                    .radius(10)
-                    .strokeColor(Color.BLUE)
-                    .fillColor(Color.RED));
         }
     }
 
 
     //check to see if you're in a node
-    private int checkAllyNode(List<Point> nodeList,Location location){
-        for(int i = 0; i < nodeList.size(); i++){
-            Point activeNode = nodeList.get(i);
-            double radius = 6778.137;//radius of earth in km
-            double distLat = (activeNode.x - location.getLatitude())*Math.PI/180;
-            double distLong = (activeNode.y - location.getLongitude())*Math.PI/180;
-            double step_a = Math.sin(distLat/2) * Math.sin(distLat/2) +
-                    Math.cos(location.getLatitude() * Math.PI / 180) * Math.cos(activeNode.x * Math.PI / 180) *
-                            Math.sin(distLong/2) * Math.sin(distLong/2);
-            double step_b = 2* Math.atan2(Math.sqrt(step_a),Math.sqrt(1-step_a));
-            double step_c = radius * step_b * 1000; //need to scale it to meters*/
-
-            if (step_c < 25  && sbmtmsg.getVisibility() == View.INVISIBLE) {
-                System.out.print("in Range");
-                lvmsg.setVisibility(View.VISIBLE);
-                tkmsg.setVisibility(View.VISIBLE);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.x, activeNode.y), 19));
-                mapState = 1;
-                return i;
+    private Node checkAllyProximity(Location location){
+        for(Node activeNode : nodes.get(allyColor)) {
+            boolean isClose = getIsClose(activeNode.center, location);
+            if (isClose) { // found a node
+                if (mapState < 2) { //issue commands based on mapState
+                    lvmsg.setVisibility(View.VISIBLE);
+                    tkmsg.setVisibility(View.VISIBLE);
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.center.lat, activeNode.center.lon), 19));
+                    mapState = 1;
+                }
+                return activeNode;
             }
-            else if(step_c < 25 && lvmsg.getVisibility() == View.INVISIBLE) {
-                lvmsg.setVisibility(View.INVISIBLE);
-                sbmtmsg.setVisibility(View.INVISIBLE);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.x - 0.00025, activeNode.y), 19));
-            }
-            else{
-                System.out.print("not in range");
-                mapState = 0;
-                makeInvisible();
-
-            }
-
         }
-        return -1;
+        return null;
     }
 
-    private int checkEnemyNode(List<Point> nodeList, Location location){
-        if(!nodeList.isEmpty()) for (int i = 0; i < nodeList.size(); i++) {
-            Point activeNode = nodeList.get(i);
-            double radius = 6778.137;//radius of earth in km
-            double distLat = (activeNode.x - location.getLatitude()) * Math.PI / 180;
-            double distLong = (activeNode.y - location.getLongitude()) * Math.PI / 180;
-            double step_a = Math.sin(distLat / 2) * Math.sin(distLat / 2) +
-            Math.cos(location.getLatitude() * Math.PI / 180) * Math.cos(activeNode.x * Math.PI / 180) *
-            Math.sin(distLong / 2) * Math.sin(distLong / 2);
-            double step_b = 2 * Math.atan2(Math.sqrt(step_a), Math.sqrt(1 - step_a));
-            double step_c = radius * step_b * 1000; //need to scale it to meters
-            System.out.print(step_c);
+    private Node checkEnemyProximity(Location location){
+        for(Node activeNode : nodes.get(enemyColor)) {
+            boolean isClose = getIsClose(activeNode.center, location);
 
-            if (step_c < 25 && mapState < 2) {
+            if (isClose && mapState < 2) {
                 System.out.print("in Range");
                 lvtrp.setVisibility(View.VISIBLE);
                 dcptmsg.setVisibility(View.VISIBLE);
                 mapState = 1;
-                return i;
-            }
-            else{
-                System.out.print("not in range");
-                mapState = 0;
-                makeInvisible();
+                return activeNode;
             }
         }
-        return -1;
+        return null;
     }
 
-    public static class Point{
-        double x;
-        double y;
-        public Point(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
-
-    public static class Node {
-        int tag;
-        String device;
-        String colour;
-        Point center;
-        public Node(int tag, String device, String colour, Point center) {
-            this.tag = tag;
-            this.device = device;
-            this.colour = colour;
-            this.center = center;
-        }
-        public Node(FirebaseUtils.RawNode rawNode, String device) {
-            this.device = device;
-            this.colour = rawNode.color;
-            this.center = new Point(rawNode.lat, rawNode.lon);
-        }
-        public Node() { }
+    private void zoomBelowNode() {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.center.lat - 0.00025, activeNode.center.lon), 19));
     }
 
     public void initButtons(){
@@ -308,12 +239,15 @@ public class MapsActivity extends FragmentActivity{
                 tkmsg.setVisibility(View.INVISIBLE);
                 lvmsg.setVisibility(View.INVISIBLE);
                 mapState = 2;
+                zoomBelowNode();
             }
         });
         tkmsg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                tkmsg.setVisibility(View.INVISIBLE);
+                lvmsg.setVisibility(View.INVISIBLE);
+                mapState = 2;
             }
         });
         dcptmsg.setOnClickListener(new View.OnClickListener() {
@@ -359,5 +293,53 @@ public class MapsActivity extends FragmentActivity{
         System.out.print("words");
     }
 
+    public void addNode(Node node) {
+        if(nodes.get(node.color) == null) {
+            nodes.put(node.color, new ArrayList<Node>());
+        }
+        Log.i("yo", node.color + "");
+        nodes.get(node.color).add(node);
+        mMap.addCircle(new CircleOptions()
+                .center(new LatLng(node.center.lat, node.center.lon))
+                .radius(25)
+                .strokeColor(getOtherColor(node.color))
+                .fillColor(getThisColor(node.color)));
+    }
+
+    public List<Node> getNodesByColor(String color) {
+        return nodes.get(color);
+    }
+
+    private int getThisColor(String team) {
+        if (team.equals("Red") || team.equals("red")) return Color.RED;
+        if (team.equals("Blue") || team.equals("blue")) return Color.BLUE;
+        return Color.BLACK; // wat should be here?
+    }
+
+    private int getOtherColor(String team) {
+        if (team.equals("Red") || team.equals("red")) return Color.BLUE;
+        if (team.equals("Blue") || team.equals("blue")) return Color.RED;
+        return Color.BLACK; // wat should be here?
+    }
+
+    public boolean getIsClose(Point start, Location location) {
+        double radius = 6778.137;//radius of earth in km
+        double distLat = (start.lat - location.getLatitude())*Math.PI/180;
+        double distLong = (start.lon - location.getLongitude())*Math.PI/180;
+        double step_a = Math.sin(distLat/2) * Math.sin(distLat/2) +
+                Math.cos(location.getLatitude() * Math.PI / 180) * Math.cos(start.lat * Math.PI / 180) *
+                        Math.sin(distLong/2) * Math.sin(distLong/2);
+        double step_b = 2* Math.atan2(Math.sqrt(step_a),Math.sqrt(1-step_a));
+        double step_c = radius * step_b * 1000; //need to scale it to meters*/
+        if (step_c < 25) {
+            return true;
+        } else{
+            return false;
+        }
+    }
+
+    public FirebaseUtils getFirebaseUtils() {
+        return firebaseUtils;
+    }
 }
 
