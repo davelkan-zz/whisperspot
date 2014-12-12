@@ -11,6 +11,8 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,8 +68,9 @@ public class FirebaseUtils {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 HashMap<String, HashMap<String, String>> messages;
                 messages = (HashMap<String, HashMap<String, String>>) dataSnapshot.getValue();
-                //TODO: Display username and timestamp, pick which message better
-                text.setText(messages.values().iterator().next().get("text"));
+                String maxKey = Collections.max(messages.keySet());
+                //TODO: Display username and timestamp
+                text.setText(messages.get(maxKey).get("text"));
             }
 
             @Override

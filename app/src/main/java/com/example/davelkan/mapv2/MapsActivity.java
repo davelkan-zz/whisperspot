@@ -2,7 +2,6 @@ package com.example.davelkan.mapv2;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -38,8 +37,8 @@ public class MapsActivity extends FragmentActivity {
     private BLEScanner scanner;
     private FirebaseUtils firebaseUtils;
     private HashMap<String, ArrayList<Node>> nodes = new HashMap<String, ArrayList<Node>>();
-    private String allyColor = "Blue";
-    private String enemyColor = "Red";
+    private String allyColor = "blue";
+    private String enemyColor = "red";
     private Node activeNode;
 
     Button leave_message;
@@ -126,7 +125,34 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
-    /**
+    LocationListener locationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+            // Called when a new location is found by the network location provider.
+            if (location != null) {
+                myLoc = location;
+                if (myLocation != null) {
+                    myLocation.remove();
+                }
+                myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
+                Node foundNode = checkAllyProximity(location);
+                if (foundNode == null) { foundNode = checkEnemyProximity(location); }
+                if (foundNode == null) { // didn't find a node
+                    mapState = 0;
+                    makeInvisible();
+                } else { // found a node
+                    activeNode = foundNode;
+                }
+            }
+        }
+
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+        public void onProviderEnabled(String provider) {}
+
+        public void onProviderDisabled(String provider) {}
+    };
+
+     /**
      * This is where we can add markers or lines, add listeners or move the camera. In this case, we
      * just add a marker near my bedroom.
      * <p>
@@ -139,37 +165,14 @@ public class MapsActivity extends FragmentActivity {
         // Get the location manager
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-                if(location != null){
-                    if (myLocation != null) {
-                        myLocation.remove();
-                    }
-                    myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
-                    Node foundNode = checkAllyProximity(location);
-                    if (foundNode == null) { foundNode = checkEnemyProximity(location); }
-                    if (foundNode == null) { // didn't find a node
-                        mapState = 0;
-                        makeInvisible();
-                    } else { // found a node
-                        activeNode = foundNode;
-                    }
-                }
-            }
 
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
 
-            public void onProviderEnabled(String provider) {}
-
-            public void onProviderDisabled(String provider) {}
-        };
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
         if (location != null) {
-            Marker myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
+            locationListener.onLocationChanged(location);
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), zoom));
         } else { //this is just so it zooms in on Olin even if it finds nothing
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(42.2929, -71.2615), zoom));
@@ -179,11 +182,24 @@ public class MapsActivity extends FragmentActivity {
 
     //check to see if you're in a node
     private Node checkAllyProximity(Location location){
-        return checkProximity(nodes.get(allyColor), location);
+        Node activeNode = checkProximity(nodes.get(allyColor), location);
+        if (activeNode != null) {
+            leave_message.setVisibility(View.VISIBLE);
+            take_message.setVisibility(View.VISIBLE);
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(activeNode.center, 19));
+            mapState = 1;
+        }
+        return activeNode;
     }
 
     private Node checkEnemyProximity(Location location){
-        return checkProximity(nodes.get(enemyColor), location);
+        Node activeNode = checkProximity(nodes.get(enemyColor), location);
+        if (activeNode != null) {
+            leave_trap.setVisibility(View.VISIBLE);
+            decrypt_message.setVisibility(View.VISIBLE);
+            mapState = 1;
+        }
+        return activeNode;
     }
 
     private Node checkProximity(List<Node> nodes, Location location) {
@@ -192,9 +208,6 @@ public class MapsActivity extends FragmentActivity {
         for(Node activeNode : nodes) {
             if (isClose(activeNode, location) && mapState < 2) {
                 System.out.print("in Range");
-                leave_trap.setVisibility(View.VISIBLE);
-                decrypt_message.setVisibility(View.VISIBLE);
-                mapState = 1;
                 return activeNode;
             }
         }
@@ -258,6 +271,8 @@ public class MapsActivity extends FragmentActivity {
                 message.setVisibility(View.INVISIBLE);
                 submit_message.setVisibility(View.INVISIBLE);
                 cancel_message.setVisibility(View.INVISIBLE);
+                take_message.setVisibility(View.VISIBLE);
+                leave_message.setVisibility(View.VISIBLE);
                 mapState = 1;
             }
         });
@@ -267,7 +282,9 @@ public class MapsActivity extends FragmentActivity {
                 message.setVisibility(View.INVISIBLE);
                 submit_message.setVisibility(View.INVISIBLE);
                 cancel_message.setVisibility(View.INVISIBLE);
-
+                take_message.setVisibility(View.VISIBLE);
+                leave_message.setVisibility(View.VISIBLE);
+                mapState = 1;
             }
         });
     }
