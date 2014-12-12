@@ -55,7 +55,6 @@ public class MapsActivity extends FragmentActivity {
     Marker myLocation;
     int zoom = 17;
 
-    //public Marker mylocation = mMap.addMarker(new MarkerOptions());
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -142,10 +141,7 @@ public class MapsActivity extends FragmentActivity {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
 
-//        final List<Point> BlueLatList = new ArrayList<Point>(Arrays.asList(new Point(42.2929,-71.2615),new Point(42.292,-71.2638),new Point(42.29293,-71.262125), new Point(42.293627,-71.264513)));
-//        final List<Point> RedLatList = new ArrayList<Point>(Arrays.asList(new Point(42.292,-71.2624),new Point(42.2926, -71.2635),new Point(42.2930325, -71.2619909)));
         // Get the location manager
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         LocationListener locationListener = new LocationListener() {
@@ -155,7 +151,7 @@ public class MapsActivity extends FragmentActivity {
                 if(location != null){
                     if (newLocation != null) {
                         newLocation.remove();
-                        if(myLocation != null) {myLocation.remove();}
+                        if (myLocation != null) {myLocation.remove();}
                     }
                     newLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("New Position"));
                     Node foundNode = checkAllyProximity(location);
