@@ -147,7 +147,6 @@ public class MapsActivity extends FragmentActivity {
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
-                //final List<Point> shocked = new ArrayList<Point>(Arrays.asList(new Point(42.29362,-71.263992),new Point(42.293572,-71.263729),new Point(42.293302,-71.263863),new Point(42.293389,-71.263965),new Point(42.293405,-71.264121),new Point(42.293338,-71.264255)));
                 if(location != null){
                     if (newLocation != null) {
                         newLocation.remove();
@@ -192,7 +191,7 @@ public class MapsActivity extends FragmentActivity {
                 if (mapState < 2) { //issue commands based on mapState
                     leave_message.setVisibility(View.VISIBLE);
                     take_message.setVisibility(View.VISIBLE);
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.center.lat, activeNode.center.lon), 19));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(activeNode.center, 19));
                     mapState = 1;
                 }
                 return activeNode;
@@ -217,7 +216,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     private void zoomBelowNode() {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.center.lat - 0.00025, activeNode.center.lon), 19));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.center.latitude - 0.00025, activeNode.center.longitude), 19));
     }
 
     public void initButtons(){
@@ -305,7 +304,7 @@ public class MapsActivity extends FragmentActivity {
         Log.i("yo", node.color + "");
         nodes.get(node.color).add(node);
         mMap.addCircle(new CircleOptions()
-                .center(new LatLng(node.center.lat, node.center.lon))
+                .center(node.center)
                 .radius(25)
                 .strokeColor(getOtherColor(node.color))
                 .fillColor(getThisColor(node.color)));
@@ -327,12 +326,12 @@ public class MapsActivity extends FragmentActivity {
         return Color.BLACK; // wat should be here?
     }
 
-    public boolean getIsClose(Point start, Location location) {
+    public boolean getIsClose(LatLng start, Location location) {
         double radius = 6778.137;//radius of earth in km
-        double distLat = (start.lat - location.getLatitude())*Math.PI/180;
-        double distLong = (start.lon - location.getLongitude())*Math.PI/180;
+        double distLat = (start.latitude - location.getLatitude())*Math.PI/180;
+        double distLong = (start.longitude - location.getLongitude())*Math.PI/180;
         double step_a = Math.sin(distLat/2) * Math.sin(distLat/2) +
-                Math.cos(location.getLatitude() * Math.PI / 180) * Math.cos(start.lat * Math.PI / 180) *
+                Math.cos(location.getLatitude() * Math.PI / 180) * Math.cos(start.latitude * Math.PI / 180) *
                         Math.sin(distLong/2) * Math.sin(distLong/2);
         double step_b = 2* Math.atan2(Math.sqrt(step_a),Math.sqrt(1-step_a));
         double step_c = radius * step_b * 1000; //need to scale it to meters*/

@@ -47,7 +47,8 @@ public class FirebaseUtils {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 for (DataSnapshot child : snapshot.getChildren()) {
-                    Node node = new Node(child.getValue(RawNode.class), child.getKey());
+                    Node node = child.getValue(Node.class);
+                    node.setDevice(child.getKey());
                     activity.addNode(node);
                 }
             }
@@ -79,35 +80,5 @@ public class FirebaseUtils {
     private String timestamp() {
         return new SimpleDateFormat("yyyy:MM:dd-HH:mm:ss").format(new Date());
 
-    }
-
-    //    pattern for Firebase objects
-    public static class RawNode {
-        String color;
-        double lat, lon;
-        public RawNode() { }
-        public RawNode(String color, double lat, double lon) {
-            this.color = color;
-            this.lat = lat;
-            this.lon = lon;
-        }
-        public void setColor(String color) {
-            this.color = color;
-        }
-        public void setLat(double lat) {
-            this.lat = lat;
-        }
-        public void setLon(double lon) {
-            this.lon = lon;
-        }
-        public String getColor() {
-            return color;
-        }
-        public double getLat() {
-            return lat;
-        }
-        public double getLon() {
-            return lon;
-        }
     }
 }
