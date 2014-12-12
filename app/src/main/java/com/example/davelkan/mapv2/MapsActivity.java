@@ -179,30 +179,18 @@ public class MapsActivity extends FragmentActivity {
 
     //check to see if you're in a node
     private Node checkAllyProximity(Location location){
-        if (nodes == null) { return null; }
-        if (location == null) { return null; }
-        for(Node activeNode : nodes.get(allyColor)) {
-            boolean isClose = getIsClose(activeNode.center, location);
-            if (isClose) { // found a node
-                if (mapState < 2) { //issue commands based on mapState
-                    leave_message.setVisibility(View.VISIBLE);
-                    take_message.setVisibility(View.VISIBLE);
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(activeNode.center, 19));
-                    mapState = 1;
-                }
-                return activeNode;
-            }
-        }
-        return null;
+        return checkProximity(nodes.get(allyColor), location);
     }
 
     private Node checkEnemyProximity(Location location){
+        return checkProximity(nodes.get(enemyColor), location);
+    }
+
+    private Node checkProximity(List<Node> nodes, Location location) {
         if (nodes == null) { return null; }
         if (location == null) { return null; }
-        for(Node activeNode : nodes.get(enemyColor)) {
-            boolean isClose = getIsClose(activeNode.center, location);
-
-            if (isClose && mapState < 2) {
+        for(Node activeNode : nodes) {
+            if (isClose(activeNode, location) && mapState < 2) {
                 System.out.print("in Range");
                 leave_trap.setVisibility(View.VISIBLE);
                 decrypt_message.setVisibility(View.VISIBLE);
@@ -308,10 +296,10 @@ public class MapsActivity extends FragmentActivity {
                 .fillColor(node.getEnemyColor()));
     }
 
-    public boolean getIsClose(LatLng start, Location location) {
+    public boolean isClose(Node start, Location location) {
         Location startLoc = new Location(location);
-        startLoc.setLatitude(start.latitude);
-        startLoc.setLongitude(start.longitude);
+        startLoc.setLatitude(start.center.latitude);
+        startLoc.setLongitude(start.center.longitude);
 
         return (startLoc.distanceTo(location) < 25);
     }
