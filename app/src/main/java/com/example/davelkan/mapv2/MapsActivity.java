@@ -299,29 +299,13 @@ public class MapsActivity extends FragmentActivity {
         if(nodes.get(node.color) == null) {
             nodes.put(node.color, new ArrayList<Node>());
         }
-        Log.i("yo", node.color + "");
+
         nodes.get(node.color).add(node);
         mMap.addCircle(new CircleOptions()
                 .center(node.center)
                 .radius(25)
-                .strokeColor(getOtherColor(node.color))
-                .fillColor(getThisColor(node.color)));
-    }
-
-    public List<Node> getNodesByColor(String color) {
-        return nodes.get(color);
-    }
-
-    private int getThisColor(String team) {
-        if (team.equals("Red") || team.equals("red")) return Color.RED;
-        if (team.equals("Blue") || team.equals("blue")) return Color.BLUE;
-        return Color.BLACK; // wat should be here?
-    }
-
-    private int getOtherColor(String team) {
-        if (team.equals("Red") || team.equals("red")) return Color.BLUE;
-        if (team.equals("Blue") || team.equals("blue")) return Color.RED;
-        return Color.BLACK; // wat should be here?
+                .strokeColor(node.getAlliedColor())
+                .fillColor(node.getEnemyColor()));
     }
 
     public boolean getIsClose(LatLng start, Location location) {
@@ -336,4 +320,3 @@ public class MapsActivity extends FragmentActivity {
         return firebaseUtils;
     }
 }
-

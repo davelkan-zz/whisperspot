@@ -1,5 +1,7 @@
 package com.example.davelkan.mapv2;
 
+import android.graphics.Color;
+
 import com.google.android.gms.maps.model.LatLng;
 
 public class Node {
@@ -40,5 +42,17 @@ public class Node {
     }
     public double getLon() {
         return center.longitude;
+    }
+
+    public int getAlliedColor() {
+        if (color.equals("Red") || color.equals("red")) return Color.RED;
+        if (color.equals("Blue") || color.equals("blue")) return Color.BLUE;
+        return Color.BLACK;
+    }
+
+    public int getEnemyColor() {
+        if (color.equals("Red") || color.equals("red")) return Color.BLUE;
+        if (color.equals("Blue") || color.equals("blue")) return Color.RED;
+        return Color.BLACK;
     }
 }
