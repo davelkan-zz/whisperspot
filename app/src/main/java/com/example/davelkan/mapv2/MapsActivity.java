@@ -185,6 +185,7 @@ public class MapsActivity extends FragmentActivity {
 
     //check to see if you're in a node
     private Node checkAllyProximity(Location location){
+        if (nodes == null) { return null; }
         for(Node activeNode : nodes.get(allyColor)) {
             boolean isClose = getIsClose(activeNode.center, location);
             if (isClose) { // found a node
@@ -201,6 +202,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     private Node checkEnemyProximity(Location location){
+        if (nodes == null) { return null; }
         for(Node activeNode : nodes.get(enemyColor)) {
             boolean isClose = getIsClose(activeNode.center, location);
 
