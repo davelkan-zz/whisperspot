@@ -63,6 +63,19 @@ public class MapsActivity extends FragmentActivity {
 //        runScanner("78:A5:04:8C:25:DF");
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        scanner.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setUpMapIfNeeded();
+        updatePoints();
+    }
+
+    // create Firebase reference and pull node data from it
     private void setupFirebase() {
         firebaseUtils = new FirebaseUtils();
 //        createNewNode("BC:6A:29:AE:DA:C1", "blue", new LatLng(42.293307, -71.263748));
@@ -70,11 +83,13 @@ public class MapsActivity extends FragmentActivity {
         firebaseUtils.populateNodes(this);
     }
 
+    // scans for a Bluetooth device
     public void runScanner(String device) {
         scanner = new BLEScanner(this);
         scanner.scanBLE(device);
     }
 
+    // adds a new device to Firebase, or updates current device's information
     private void createNewNode(String device, String color, LatLng center) {
         List<Owner> ownersList = new ArrayList<>();
         ownersList.add(new Owner("default", 200));
@@ -85,17 +100,23 @@ public class MapsActivity extends FragmentActivity {
         firebaseUtils.pushNode(new Node(device, color, 100, center, owners));
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        scanner.onActivityResult(requestCode, resultCode, data);
+    // adds a node to list of nodes and draws on map
+    public void addNode(Node node) {
+        if(nodes.get(node.getColor()) == null) {
+            nodes.put(node.getColor(), new ArrayList<Node>());
+        }
+
+        // TODO: be able to update node color
+        nodes.get(node.getColor()).add(node);
+        mMap.addCircle(new CircleOptions()
+                .center(node.getCenter())
+                .radius(25)
+                .strokeColor(node.getAllyColor())
+                .fillColor(node.getEnemyColor()));
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        setUpMapIfNeeded();
-        updatePoints();
+    public FirebaseUtils getFirebaseUtils() {
+        return firebaseUtils;
     }
 
     /**
@@ -311,28 +332,11 @@ public class MapsActivity extends FragmentActivity {
         System.out.print("words");
     }
 
-    public void addNode(Node node) {
-        if(nodes.get(node.getColor()) == null) {
-            nodes.put(node.getColor(), new ArrayList<Node>());
-        }
-
-        nodes.get(node.getColor()).add(node);
-        mMap.addCircle(new CircleOptions()
-                .center(node.getCenter())
-                .radius(25)
-                .strokeColor(node.getAllyColor())
-                .fillColor(node.getEnemyColor()));
-    }
-
     public boolean isClose(Node start, Location location) {
         Location startLoc = new Location(location);
         startLoc.setLatitude(start.getLat());
         startLoc.setLongitude(start.getLon());
 
         return (startLoc.distanceTo(location) < 25);
-    }
-
-    public FirebaseUtils getFirebaseUtils() {
-        return firebaseUtils;
     }
 }

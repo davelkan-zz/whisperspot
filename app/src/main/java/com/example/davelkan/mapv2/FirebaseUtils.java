@@ -31,10 +31,6 @@ public class FirebaseUtils {
         currentDevice.child("UUIDs").setValue(valueMap.keySet());
     }
 
-    public void pushNode(Node node) {
-        firebase.child("nodes").child(node.getDevice()).setValue(node.getRawNode());
-    }
-
     public void sendMessage(String messageText, String username, String deviceID) {
         Firebase deviceMessages = (new Firebase(url)).child("messages")
                                                      .child(deviceID);
@@ -45,6 +41,12 @@ public class FirebaseUtils {
         deviceMessages.push().setValue(message);
     }
 
+    // pushes node data to Firebase list of node data
+    public void pushNode(Node node) {
+        firebase.child("nodes").child(node.getDevice()).setValue(node.getRawNode());
+    }
+
+    // pulls list of node data from firebase and creates Node objects for each
     public void populateNodes(final MapsActivity activity) {
         Firebase dataRef = firebase.child("nodes");
         dataRef.addListenerForSingleValueEvent(new ValueEventListener() {

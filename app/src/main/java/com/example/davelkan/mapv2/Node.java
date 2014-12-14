@@ -102,6 +102,7 @@ public class Node {
     }
 
     // add points to a node by color of capturing team
+    // TODO: manage owners list upon capture
     public int captureByPoints(String userName, String color, int points) {
         // add capturing team's color to list of owners
         if(owners.get(color) == null) {
