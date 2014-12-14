@@ -39,6 +39,9 @@ public class MapsActivity extends FragmentActivity {
     private HashMap<String, List<Node>> nodes = new HashMap<>();
     private String allyColor = "blue";
     private String enemyColor = "red";
+    private String userName = "Ralph";
+    private int userPoints = 0;
+    private int captureBonus = 10;
     private Node activeNode;
     private Node intel = null;
     private Location sink;
@@ -61,20 +64,10 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         Firebase.setAndroidContext(this);
+        setupFirebase();
         initButtons();
-        pullFromFirebase();
         setUpMapIfNeeded();
 //        runScanner("78:A5:04:8C:25:DF");
-    }
-
-    private void pullFromFirebase() {
-        firebaseUtils = new FirebaseUtils();
-        firebaseUtils.populateNodes(this);
-    }
-
-    public void runScanner(String device) {
-        scanner = new BLEScanner(this);
-        scanner.scanBLE(device);
     }
 
     @Override
@@ -82,12 +75,68 @@ public class MapsActivity extends FragmentActivity {
         scanner.onActivityResult(requestCode, resultCode, data);
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
         updatePoints();
+    }
+
+    // create Firebase reference and pull node data from it
+    private void setupFirebase() {
+        firebaseUtils = new FirebaseUtils();
+//        createNewNode("BC:6A:29:AE:DA:C1", "blue", new LatLng(42.293307, -71.263748));
+//        createNewNode("78:A5:04:8C:25:DF", "red", new LatLng(42.29372, -71.264478));
+//        createNewNode("device0", "blue", new LatLng(42.292671, -71.262174));
+        firebaseUtils.populateNodes(this);
+    }
+
+    // scans for a Bluetooth device
+    public void runScanner(String device) {
+        scanner = new BLEScanner(this);
+        scanner.scanBLE(device);
+    }
+
+    // adds a new device to Firebase, or updates current device's information
+    private void createNewNode(String device, String color, LatLng center) {
+        List<Owner> ownersList = new ArrayList<>();
+        ownersList.add(new Owner("default", 200));
+
+        HashMap<String, List<Owner>> owners = new HashMap<>();
+        owners.put(color, ownersList);
+
+        firebaseUtils.pushNode(new Node(device, color, 100, center, owners));
+    }
+
+    // adds a node to list of nodes and draws on map
+    public void addNode(Node node) {
+        if(nodes.get(node.getColor()) == null) {
+            nodes.put(node.getColor(), new ArrayList<Node>());
+        }
+
+        // TODO: be able to update node color
+        nodes.get(node.getColor()).add(node);
+        mMap.addCircle(new CircleOptions()
+                .center(node.getCenter())
+                .radius(25)
+                .strokeColor(node.getEnemyColor())
+                .fillColor(node.getAllyColor()));
+    }
+
+    public void captureNodeByPoints(Node node, int points) {
+        CaptureResult result = node.captureByPoints(userName, allyColor, points);
+        userPoints += result.getUsedPoints();
+        if (result.getWasCaptured()) {
+//            updateNodeColor(node, allyColor);
+            nodes.get(node.getColor()).remove(node);
+            nodes.get(allyColor).add(node);
+            firebaseUtils.pushNode(node);
+            userPoints += captureBonus;
+        }
+    }
+
+    public FirebaseUtils getFirebaseUtils() {
+        return firebaseUtils;
     }
 
     /**
@@ -313,20 +362,6 @@ public class MapsActivity extends FragmentActivity {
         System.out.print("words");
     }
 
-    public void addNode(Node node) {
-        if(nodes.get(node.getColor()) == null) {
-            nodes.put(node.getColor(), new ArrayList<Node>());
-        //TODO: check which nodes we know about
-        }
-
-        nodes.get(node.getColor()).add(node);
-        mMap.addCircle(new CircleOptions()
-                .center(node.getCenter())
-                .radius(25)
-                .strokeColor(node.getEnemyColor())
-                .fillColor(node.getAllyColor()));
-    }
-
     public boolean isClose(Node start, Location location) {
         Location startLoc = new Location(location);
         startLoc.setLatitude(start.getLat());
@@ -409,9 +444,5 @@ public class MapsActivity extends FragmentActivity {
 
     private boolean decryptCounter(){  //counter to stop users trying to decrypt too frequently
         return true;
-    }
-
-    public FirebaseUtils getFirebaseUtils() {
-        return firebaseUtils;
     }
 }
