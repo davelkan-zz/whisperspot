@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.util.Random;
 
 import com.firebase.client.Firebase;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -39,6 +40,9 @@ public class MapsActivity extends FragmentActivity {
     private String allyColor = "blue";
     private String enemyColor = "red";
     private Node activeNode;
+    private Node intel = null;
+    private Location source;
+    private Location sink;
 
     Button leave_message;
     Button take_message;
@@ -47,6 +51,7 @@ public class MapsActivity extends FragmentActivity {
     Button submit_message;
     Button cancel_message;
     TextView display_message;
+    TextView pop_up;
     EditText message;
     int mapState = 0;
     Marker myLocation;
@@ -57,8 +62,8 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         Firebase.setAndroidContext(this);
-        pullFromFirebase();
         initButtons();
+        pullFromFirebase();
         setUpMapIfNeeded();
 //        runScanner("78:A5:04:8C:25:DF");
     }
@@ -131,6 +136,7 @@ public class MapsActivity extends FragmentActivity {
                 if (myLocation != null) {
                     myLocation.remove();
                 }
+                //TODO:Check if near undiscovered node only display those known
                 myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
                 Node foundNode = checkAllyProximity(location);
                 if (foundNode == null) { foundNode = checkEnemyProximity(location); }
@@ -225,6 +231,8 @@ public class MapsActivity extends FragmentActivity {
         display_message = (TextView) findViewById(R.id.message_display);
         submit_message = (Button) findViewById(R.id.sbmtmsg);
         cancel_message = (Button) findViewById(R.id.cnclmsg);
+        pop_up = (TextView) findViewById(R.id.popUp);
+
         leave_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -245,7 +253,8 @@ public class MapsActivity extends FragmentActivity {
                 mapState = 2;
                 display_message.setText("");
                 display_message.setVisibility(View.VISIBLE);
-                (new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
+                //(new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
+                gatherIntel();
             }
         });
         decrypt_message.setOnClickListener(new View.OnClickListener() {
@@ -285,6 +294,12 @@ public class MapsActivity extends FragmentActivity {
                 mapState = 1;
             }
         });
+        pop_up.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                pop_up.setVisibility(View.INVISIBLE);
+            }
+        });
     }
 
     public void makeInvisible(){
@@ -302,14 +317,15 @@ public class MapsActivity extends FragmentActivity {
     public void addNode(Node node) {
         if(nodes.get(node.getColor()) == null) {
             nodes.put(node.getColor(), new ArrayList<Node>());
+        //TODO: check which nodes we know about
         }
 
         nodes.get(node.getColor()).add(node);
         mMap.addCircle(new CircleOptions()
                 .center(node.getCenter())
                 .radius(25)
-                .strokeColor(node.getAllyColor())
-                .fillColor(node.getEnemyColor()));
+                .strokeColor(node.getEnemyColor())
+                .fillColor(node.getAllyColor()));
     }
 
     public boolean isClose(Node start, Location location) {
@@ -317,7 +333,87 @@ public class MapsActivity extends FragmentActivity {
         startLoc.setLatitude(start.getLat());
         startLoc.setLongitude(start.getLon());
 
-        return (startLoc.distanceTo(location) < 25);
+        //return (startLoc.distanceTo(location) < 25);
+        //TODO: Remove the following spoof!
+        return(true);
+    }
+
+    private void gatherIntel() { //gathering intel at allied node... checking node color may be unnecessary
+        if(activeNode.color == allyColor) {
+            if (intel == null) {
+                pop_up.setText("Intel Gathered!  Deliver it to another WhisperSpot!");
+                pop_up.setVisibility(View.VISIBLE);
+
+                //TODO: Fanciness - add fancy fake number generator
+                intel = activeNode;
+            } else {
+                pop_up.setText("You may only carry 1 intel at a time.");
+                pop_up.setVisibility(View.VISIBLE);
+            }
+        }
+        else{
+            pop_up.setText("This is enemy territory! You have to decrypt intel here!");
+            pop_up.setVisibility(View.VISIBLE);
+        }
+    }
+
+    //decrypt intel at enemy node
+    private void decryptIntel() {
+        if(activeNode.color == enemyColor) {
+            if (intel == null && decryptCounter()) {
+                //TODO: Functionality - Report that Intel gathered
+                //TODO: factor in influence for probability
+                Random rand = new Random();
+                int odds = rand.nextInt(10);
+                if (odds > 5) {
+                    intel = activeNode;
+                    pop_up.setText("Intel Decrytped!  Deliver it to another WhisperSpot!");
+                    pop_up.setVisibility(View.VISIBLE);
+                }
+                else{
+                    pop_up.setText("Your cover was blown while decrypting message! You need to lay low for a bit!");
+                    pop_up.setVisibility(View.VISIBLE);
+                }
+            }
+            else if (!decryptCounter()) {
+                pop_up.setText("Your cover is blown here! You need to lay low for a bit!");
+                pop_up.setVisibility(View.VISIBLE);
+            } else if (intel != null) {
+                pop_up.setText("You may only carry 1 intel at a time.");
+                pop_up.setVisibility(View.VISIBLE);
+            }
+        }
+
+        else{
+            pop_up.setText("You don't need to decrypt intel at allied WhisperSpots");
+            pop_up.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void returnIntel(){
+        if(intel != null){
+            //TODO: Check distance from intel source
+            source.setLatitude(intel.getLat());
+            source.setLongitude(intel.getLon());
+            sink.setLatitude(activeNode.getLat());
+            sink.setLongitude(activeNode.getLon());
+            float distance = source.distanceTo(sink);
+            //TODO: Formula to convert distance to points, for now it's just going to be dumb.
+            float influence = 5 + ((int)distance/200);
+            intel = null;
+            pop_up.setText("Nice Work Agent! You gained"+influence+"Influence over this WhisperSpot");
+            pop_up.setVisibility(View.VISIBLE);
+        }
+        else{
+            pop_up.setText("You poor ignorant fool. You have no Intel to offer.");
+            pop_up.setVisibility(View.VISIBLE);
+        }
+    }
+
+
+
+    private boolean decryptCounter(){  //counter to stop users trying to decrypt too frequently
+        return true;
     }
 
     public FirebaseUtils getFirebaseUtils() {

@@ -9,12 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Node {
-    private String device;
-    private String color;
-    private int ownership;
-    private LatLng center;
-    private HashMap<String, List<String>> owners = new HashMap<>();
-    private List<String> colors = new ArrayList<>();
+    public String device;
+    public String color;
+    public int ownership;
+    public LatLng center;
+    public HashMap<String, List<String>> owners = new HashMap<>();
+    public List<String> colors = new ArrayList<>();
 
     public Node() {
         center = new LatLng(0,0);

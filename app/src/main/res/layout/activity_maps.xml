@@ -68,17 +68,27 @@
         android:visibility="invisible"
         android:layout_gravity="right|top" />
 
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="255dp"
+    <TextView
+        android:layout_width="292dp"
+        android:layout_height="109dp"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Enter Message Here"
-        android:id="@+id/message"
+        android:text=""
         android:visibility="invisible"
-        android:background="@color/material_blue_grey_800"
-        android:layout_gravity="center_horizontal|bottom" />
+        android:id="@+id/popUp"
+        android:onClick=""
+        android:layout_gravity="center" />
 
-\
+
+     <EditText
+         android:layout_width="match_parent"
+         android:layout_height="255dp"
+         android:textAppearance="?android:attr/textAppearanceMedium"
+         android:text="Enter Message Here"
+         android:id="@+id/message"
+         android:visibility="invisible"
+         android:background="@color/material_blue_grey_800"
+         android:layout_gravity="center_horizontal|bottom" />
+
+
 
 </FrameLayout>

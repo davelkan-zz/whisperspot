@@ -51,6 +51,9 @@ public class FirebaseUtils {
             public void onDataChange(DataSnapshot snapshot) {
                 for (DataSnapshot child : snapshot.getChildren()) {
                     Node node = new Node(child.getValue(RawNode.class), child.getKey());
+//                    Log.i("hello",child.getValue().toString());
+//                    Node node = child.getValue(Node.class);
+//                    node.setDevice(child.getKey());
                     activity.addNode(node);
                 }
             }
