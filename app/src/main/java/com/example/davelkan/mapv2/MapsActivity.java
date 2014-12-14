@@ -429,6 +429,7 @@ public class MapsActivity extends FragmentActivity {
             Location.distanceBetween(intel.getLat(), intel.getLon(), activeNode.getLat(), activeNode.getLon(), res);
             int distance = (int) res[0];
             int influence = 5 + ((int)distance/200);
+            captureNodeByPoints(activeNode, influence);
             //TODO: Tell Searing about influence
             intel = null;
             pop_up.setText("Nice Work Agent! You gained"+influence+"Influence over this WhisperSpot");
