@@ -8,7 +8,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -36,7 +35,7 @@ public class MapsActivity extends FragmentActivity {
     private LocationManager locationManager;
     private BLEScanner scanner;
     private FirebaseUtils firebaseUtils;
-    private HashMap<String, ArrayList<Node>> nodes = new HashMap<String, ArrayList<Node>>();
+    private HashMap<String, List<Node>> nodes = new HashMap<>();
     private String allyColor = "blue";
     private String enemyColor = "red";
     private Node activeNode;
@@ -59,9 +58,9 @@ public class MapsActivity extends FragmentActivity {
         setContentView(R.layout.activity_maps);
         Firebase.setAndroidContext(this);
         pullFromFirebase();
-        setUpMapIfNeeded();
         initButtons();
-        runScanner();
+        setUpMapIfNeeded();
+//        runScanner("78:A5:04:8C:25:DF");
     }
 
     private void pullFromFirebase() {
@@ -69,9 +68,9 @@ public class MapsActivity extends FragmentActivity {
         firebaseUtils.populateNodes(this);
     }
 
-    public void runScanner() {
+    public void runScanner(String device) {
         scanner = new BLEScanner(this);
-        scanner.scanBLE("78:A5:04:8C:25:DF");
+        scanner.scanBLE(device);
     }
 
     @Override
@@ -84,7 +83,7 @@ public class MapsActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
-        updatepoints();
+        updatePoints();
     }
 
     /**
@@ -129,7 +128,6 @@ public class MapsActivity extends FragmentActivity {
         public void onLocationChanged(Location location) {
             // Called when a new location is found by the network location provider.
             if (location != null) {
-                myLoc = location;
                 if (myLocation != null) {
                     myLocation.remove();
                 }
@@ -186,7 +184,7 @@ public class MapsActivity extends FragmentActivity {
         if (activeNode != null) {
             leave_message.setVisibility(View.VISIBLE);
             take_message.setVisibility(View.VISIBLE);
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(activeNode.center, 19));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(activeNode.getCenter(), 19));
             mapState = 1;
         }
         return activeNode;
@@ -215,7 +213,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     private void zoomBelowNode() {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.center.latitude - 0.00025, activeNode.center.longitude), 19));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.getLat() - 0.00025, activeNode.getLon()), 19));
     }
 
     public void initButtons(){
@@ -288,6 +286,7 @@ public class MapsActivity extends FragmentActivity {
             }
         });
     }
+
     public void makeInvisible(){
         leave_trap.setVisibility(View.INVISIBLE);
         decrypt_message.setVisibility(View.INVISIBLE);
@@ -296,27 +295,27 @@ public class MapsActivity extends FragmentActivity {
         cancel_message.setVisibility(View.INVISIBLE);
     }
 
-    private void updatepoints(){
+    private void updatePoints(){
         System.out.print("words");
     }
 
     public void addNode(Node node) {
-        if(nodes.get(node.color) == null) {
-            nodes.put(node.color, new ArrayList<Node>());
+        if(nodes.get(node.getColor()) == null) {
+            nodes.put(node.getColor(), new ArrayList<Node>());
         }
 
-        nodes.get(node.color).add(node);
+        nodes.get(node.getColor()).add(node);
         mMap.addCircle(new CircleOptions()
-                .center(node.center)
+                .center(node.getCenter())
                 .radius(25)
-                .strokeColor(node.getAlliedColor())
+                .strokeColor(node.getAllyColor())
                 .fillColor(node.getEnemyColor()));
     }
 
     public boolean isClose(Node start, Location location) {
         Location startLoc = new Location(location);
-        startLoc.setLatitude(start.center.latitude);
-        startLoc.setLongitude(start.center.longitude);
+        startLoc.setLatitude(start.getLat());
+        startLoc.setLongitude(start.getLon());
 
         return (startLoc.distanceTo(location) < 25);
     }
