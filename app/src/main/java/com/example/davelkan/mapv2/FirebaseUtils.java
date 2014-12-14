@@ -1,9 +1,5 @@
 package com.example.davelkan.mapv2;
 
-/**
- * Created by mwismer on 11/6/14.
- */
-
 import android.util.Log;
 import android.widget.TextView;
 import com.firebase.client.DataSnapshot;
@@ -26,12 +22,17 @@ public class FirebaseUtils {
     public FirebaseUtils() {
         firebase = new Firebase(url);
     }
+
     public void pushUUIDInfo(String deviceAddress, Map<String, byte[]> valueMap) {
         Firebase currentDevice = new Firebase(url).child("devices")
                                                   .child(deviceAddress)
                                                   .child(timestamp());
         currentDevice.child("values").setValue(valueMap);
         currentDevice.child("UUIDs").setValue(valueMap.keySet());
+    }
+
+    public void pushNode(Node node) {
+        firebase.child("nodes").child(node.getDevice()).setValue(node.getRawNode());
     }
 
     public void sendMessage(String messageText, String username, String deviceID) {

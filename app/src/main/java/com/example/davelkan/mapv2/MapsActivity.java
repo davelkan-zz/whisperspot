@@ -57,20 +57,32 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         Firebase.setAndroidContext(this);
-        pullFromFirebase();
+        setupFirebase();
         initButtons();
         setUpMapIfNeeded();
 //        runScanner("78:A5:04:8C:25:DF");
     }
 
-    private void pullFromFirebase() {
+    private void setupFirebase() {
         firebaseUtils = new FirebaseUtils();
+//        createNewNode("BC:6A:29:AE:DA:C1", "blue", new LatLng(42.293307, -71.263748));
+//        createNewNode("78:A5:04:8C:25:DF", "red", new LatLng(42.29372, -71.264478));
         firebaseUtils.populateNodes(this);
     }
 
     public void runScanner(String device) {
         scanner = new BLEScanner(this);
         scanner.scanBLE(device);
+    }
+
+    private void createNewNode(String device, String color, LatLng center) {
+        List<Owner> ownersList = new ArrayList<>();
+        ownersList.add(new Owner("default", 200));
+
+        HashMap<String, List<Owner>> owners = new HashMap<>();
+        owners.put(color, ownersList);
+
+        firebaseUtils.pushNode(new Node(device, color, 100, center, owners));
     }
 
     @Override

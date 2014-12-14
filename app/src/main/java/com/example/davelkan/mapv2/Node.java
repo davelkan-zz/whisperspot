@@ -13,11 +13,11 @@ public class Node {
     private String color;
     private int ownership;
     private LatLng center;
-    private HashMap<String, List<String>> owners = new HashMap<>();
-    private List<String> colors = new ArrayList<>();
+    private HashMap<String, List<Owner>> owners = new HashMap<>();
 
     public Node() {
         center = new LatLng(0,0);
+        owners = new HashMap<>();
     }
 
     public Node(RawNode rawNode, String device) {
@@ -25,17 +25,19 @@ public class Node {
         this.color = rawNode.getColor();
         this.ownership = rawNode.getOwnership();
         this.center = new LatLng(rawNode.getLat(), rawNode.getLon());
+        this.owners = rawNode.getOwners();
     }
 
-    public Node(String color, int ownership, double lat, double lon) {
+    public Node(String device, String color, int ownership, LatLng center, HashMap<String, List<Owner>> owners) {
+        this.device = device;
         this.color = color;
         this.ownership = ownership;
-        this.center = new LatLng(lat, lon);
+        this.center = center;
+        this.owners = owners;
     }
 
-    public Node(String color, LatLng center) {
-        this.color = color;
-        this.center = center;
+    public RawNode getRawNode() {
+        return new RawNode(color, ownership, center.latitude, center.longitude, owners);
     }
 
     public void setDevice(String device) {
@@ -53,11 +55,13 @@ public class Node {
     public void setLon(double lon) {
         this.center = new LatLng(center.latitude, lon);
     }
+    public void setCenter(LatLng center) {
+        this.center = center;
+    }
 
     public String getDevice() {
         return device;
     }
-
     public int getOwnership() {
         return ownership;
     }
@@ -98,7 +102,13 @@ public class Node {
     }
 
     // add points to a node by color of capturing team
-    public int captureByPoints(String color, int points) {
+    public int captureByPoints(String userName, String color, int points) {
+        // add capturing team's color to list of owners
+        if(owners.get(color) == null) {
+            owners.put(color, new ArrayList<Owner>());
+        }
+
+        // set new ownership number and color according to capture details
         int usedPoints = points;
         if (color.equalsIgnoreCase(this.color)) {
             ownership += points;
@@ -110,11 +120,14 @@ public class Node {
                 setColor(color);
             }
         }
+        // check if node is over-captured
         if (ownership > 100) {
             int wastedPoints = ownership - 100;
             usedPoints = points - wastedPoints;
             ownership = 100;
         }
+
+        owners.get(color).add(new Owner(userName, usedPoints));
         return usedPoints;
     }
 }
