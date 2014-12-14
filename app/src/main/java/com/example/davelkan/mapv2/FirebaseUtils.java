@@ -4,6 +4,7 @@ package com.example.davelkan.mapv2;
  * Created by mwismer on 11/6/14.
  */
 
+import android.util.Log;
 import android.widget.TextView;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -49,8 +50,7 @@ public class FirebaseUtils {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 for (DataSnapshot child : snapshot.getChildren()) {
-                    Node node = child.getValue(Node.class);
-                    node.setDevice(child.getKey());
+                    Node node = new Node(child.getValue(RawNode.class), child.getKey());
                     activity.addNode(node);
                 }
             }
