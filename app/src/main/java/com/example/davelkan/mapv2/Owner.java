@@ -11,6 +11,11 @@ public class Owner {
         this.points = points;
     }
 
+    // should never have 0 points...
+    public void subtractPoints(int points) {
+        this.points -= points;
+    }
+
     public int getPoints() {
         return points;
     }

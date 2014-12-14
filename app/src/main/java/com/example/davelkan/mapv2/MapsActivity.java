@@ -38,6 +38,9 @@ public class MapsActivity extends FragmentActivity {
     private HashMap<String, List<Node>> nodes = new HashMap<>();
     private String allyColor = "blue";
     private String enemyColor = "red";
+    private String userName = "Ralph";
+    private int userPoints = 0;
+    private int captureBonus = 10;
     private Node activeNode;
 
     Button leave_message;
@@ -80,6 +83,7 @@ public class MapsActivity extends FragmentActivity {
         firebaseUtils = new FirebaseUtils();
 //        createNewNode("BC:6A:29:AE:DA:C1", "blue", new LatLng(42.293307, -71.263748));
 //        createNewNode("78:A5:04:8C:25:DF", "red", new LatLng(42.29372, -71.264478));
+//        createNewNode("device0", "blue", new LatLng(42.292671, -71.262174));
         firebaseUtils.populateNodes(this);
     }
 
@@ -111,8 +115,20 @@ public class MapsActivity extends FragmentActivity {
         mMap.addCircle(new CircleOptions()
                 .center(node.getCenter())
                 .radius(25)
-                .strokeColor(node.getAllyColor())
-                .fillColor(node.getEnemyColor()));
+                .strokeColor(node.getEnemyColor())
+                .fillColor(node.getAllyColor()));
+    }
+
+    public void captureNodeByPoints(Node node, int points) {
+        CaptureResult result = node.captureByPoints(userName, allyColor, points);
+        userPoints += result.getUsedPoints();
+        if (result.getWasCaptured()) {
+//            updateNodeColor(node, allyColor);
+            nodes.get(node.getColor()).remove(node);
+            nodes.get(allyColor).add(node);
+            firebaseUtils.pushNode(node);
+            userPoints += captureBonus;
+        }
     }
 
     public FirebaseUtils getFirebaseUtils() {

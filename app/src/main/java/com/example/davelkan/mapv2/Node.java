@@ -16,7 +16,7 @@ public class Node {
     private HashMap<String, List<Owner>> owners = new HashMap<>();
 
     public Node() {
-        center = new LatLng(0,0);
+        center = new LatLng(0, 0);
         owners = new HashMap<>();
     }
 
@@ -81,7 +81,7 @@ public class Node {
     }
 
     // get color string of opposite color of this node
-    public String getOtherColor() {
+    public String getOtherColor(String color) {
         if (color.equalsIgnoreCase("red")) return "blue";
         if (color.equalsIgnoreCase("blue")) return "red";
         return "black";
@@ -102,15 +102,15 @@ public class Node {
     }
 
     // add points to a node by color of capturing team
-    // TODO: manage owners list upon capture
-    public int captureByPoints(String userName, String color, int points) {
+    public CaptureResult captureByPoints(String userName, String captureColor, int points) {
         // add capturing team's color to list of owners
-        if(owners.get(color) == null) {
-            owners.put(color, new ArrayList<Owner>());
+        if (owners.get(captureColor) == null) {
+            owners.put(captureColor, new ArrayList<Owner>());
         }
 
         // set new ownership number and color according to capture details
         int usedPoints = points;
+        boolean wasCaptured = false;
         if (color.equalsIgnoreCase(this.color)) {
             ownership += points;
         } else {
@@ -118,9 +118,11 @@ public class Node {
             // switch node color if ownership drops below 0
             if (ownership < 0) {
                 ownership *= -1;
-                setColor(color);
+                setColor(captureColor);
+                wasCaptured = true;
             }
         }
+
         // check if node is over-captured
         if (ownership > 100) {
             int wastedPoints = ownership - 100;
@@ -128,7 +130,26 @@ public class Node {
             ownership = 100;
         }
 
-        owners.get(color).add(new Owner(userName, usedPoints));
-        return usedPoints;
+        // subtract used capture points from other team's list of owners
+        List<Owner> otherOwners = owners.get(getOtherColor(captureColor));
+        int pointsToRemove = usedPoints;
+        while (pointsToRemove > 0) {
+            // start removing from beginning of list (oldest owners)
+            Owner otherOwner = otherOwners.get(0);
+            // remove owner if all their points are removed, otherwise decrease their points
+            if (pointsToRemove >= otherOwner.getPoints()) {
+                otherOwners.remove(0);
+                pointsToRemove -= otherOwner.getPoints();
+            } else {
+                otherOwner.subtractPoints(pointsToRemove);
+            }
+        }
+
+        // add used capture points to the end of this team's list of owners
+        if (usedPoints > 0) {
+            owners.get(color).add(new Owner(userName, usedPoints));
+        }
+
+        return new CaptureResult(usedPoints, wasCaptured);
     }
 }
