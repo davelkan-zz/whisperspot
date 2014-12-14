@@ -41,7 +41,6 @@ public class MapsActivity extends FragmentActivity {
     private String enemyColor = "red";
     private Node activeNode;
     private Node intel = null;
-    private Location source;
     private Location sink;
 
     Button leave_message;
@@ -168,9 +167,6 @@ public class MapsActivity extends FragmentActivity {
 
         // Get the location manager
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-
-
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -236,13 +232,15 @@ public class MapsActivity extends FragmentActivity {
         leave_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cancel_message.setVisibility(View.VISIBLE);
-                submit_message.setVisibility(View.VISIBLE);
-                message.setVisibility(View.VISIBLE);
+                //cancel_message.setVisibility(View.VISIBLE);
+                //submit_message.setVisibility(View.VISIBLE);
+                //message.setVisibility(View.VISIBLE);
                 take_message.setVisibility(View.INVISIBLE);
                 leave_message.setVisibility(View.INVISIBLE);
                 mapState = 2;
-                zoomBelowNode();
+                returnIntel();
+
+                //zoomBelowNode();
             }
         });
         take_message.setOnClickListener(new View.OnClickListener() {
@@ -251,8 +249,8 @@ public class MapsActivity extends FragmentActivity {
                 take_message.setVisibility(View.INVISIBLE);
                 leave_message.setVisibility(View.INVISIBLE);
                 mapState = 2;
-                display_message.setText("");
-                display_message.setVisibility(View.VISIBLE);
+                //display_message.setText("");
+                //display_message.setVisibility(View.VISIBLE);
                 //(new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
                 gatherIntel();
             }
@@ -298,6 +296,7 @@ public class MapsActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 pop_up.setVisibility(View.INVISIBLE);
+                leave_message.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -333,17 +332,15 @@ public class MapsActivity extends FragmentActivity {
         startLoc.setLatitude(start.getLat());
         startLoc.setLongitude(start.getLon());
 
-        //return (startLoc.distanceTo(location) < 25);
-        //TODO: Remove the following spoof!
-        return(true);
+        return (startLoc.distanceTo(location) < 25);
+        //return(true);
     }
 
     private void gatherIntel() { //gathering intel at allied node... checking node color may be unnecessary
-        if(activeNode.color == allyColor) {
+        if(activeNode.getColor().equalsIgnoreCase(allyColor)) {
             if (intel == null) {
                 pop_up.setText("Intel Gathered!  Deliver it to another WhisperSpot!");
                 pop_up.setVisibility(View.VISIBLE);
-
                 //TODO: Fanciness - add fancy fake number generator
                 intel = activeNode;
             } else {
@@ -359,7 +356,7 @@ public class MapsActivity extends FragmentActivity {
 
     //decrypt intel at enemy node
     private void decryptIntel() {
-        if(activeNode.color == enemyColor) {
+        if(activeNode.getColor().equalsIgnoreCase(enemyColor)) {
             if (intel == null && decryptCounter()) {
                 //TODO: Functionality - Report that Intel gathered
                 //TODO: factor in influence for probability
@@ -393,13 +390,11 @@ public class MapsActivity extends FragmentActivity {
     private void returnIntel(){
         if(intel != null){
             //TODO: Check distance from intel source
-            source.setLatitude(intel.getLat());
-            source.setLongitude(intel.getLon());
-            sink.setLatitude(activeNode.getLat());
-            sink.setLongitude(activeNode.getLon());
-            float distance = source.distanceTo(sink);
-            //TODO: Formula to convert distance to points, for now it's just going to be dumb.
-            float influence = 5 + ((int)distance/200);
+            float[] res = new float[]{0};
+            Location.distanceBetween(intel.getLat(), intel.getLon(), activeNode.getLat(), activeNode.getLon(), res);
+            int distance = (int) res[0];
+            int influence = 5 + ((int)distance/200);
+            //TODO: Tell Searing about influence
             intel = null;
             pop_up.setText("Nice Work Agent! You gained"+influence+"Influence over this WhisperSpot");
             pop_up.setVisibility(View.VISIBLE);

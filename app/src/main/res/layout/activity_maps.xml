@@ -31,7 +31,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Take Message"
+        android:text="Gather Intel"
         android:id="@+id/tkmsg"
         android:visibility="invisible"
         android:layout_gravity="left|top" />
@@ -39,7 +39,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Leave Message"
+        android:text="Deliver Intel"
         android:id="@+id/lvmsg"
         android:visibility="invisible"
         android:layout_gravity="right|top" />
@@ -75,7 +75,7 @@
         android:text=""
         android:visibility="invisible"
         android:id="@+id/popUp"
-        android:onClick=""
+        android:background="@color/wallet_holo_blue_light"
         android:layout_gravity="center" />
 
 
