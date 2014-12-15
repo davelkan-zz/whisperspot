@@ -8,6 +8,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,11 +41,13 @@ public class MapsActivity extends FragmentActivity {
     private String allyColor = "blue";
     private String enemyColor = "red";
     private String userName = "Ralph";
-    private int userPoints = 0;
+    private int userPoints = 0; // TODO: store this in Firebase
     private int captureBonus = 10;
     private Node activeNode;
     private Node intel = null;
     private Location sink;
+    private Toast oldToast = null;
+    private LatLng olin = new LatLng(42.2929, -71.2615);
 
     Button leave_message;
     Button take_message;
@@ -63,6 +66,7 @@ public class MapsActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        Log.i("STARTUP", "====================================");
         Firebase.setAndroidContext(this);
         setupFirebase();
         initButtons();
@@ -85,10 +89,20 @@ public class MapsActivity extends FragmentActivity {
     // create Firebase reference and pull node data from it
     private void setupFirebase() {
         firebaseUtils = new FirebaseUtils();
-//        createNewNode("BC:6A:29:AE:DA:C1", "blue", new LatLng(42.293307, -71.263748));
-//        createNewNode("78:A5:04:8C:25:DF", "red", new LatLng(42.29372, -71.264478));
-//        createNewNode("device0", "blue", new LatLng(42.292671, -71.262174));
+        resetFirebase(false);
         firebaseUtils.populateNodes(this);
+    }
+
+    // wipes all nodestats from the Firebase
+    private void resetFirebase(boolean confirm) {
+        if (confirm) {
+            createNewNode("BC:6A:29:AE:DA:C1", "blue", new LatLng(42.293307, -71.263748));
+            createNewNode("78:A5:04:8C:25:DF", "red", new LatLng(42.29372, -71.264478));
+            createNewNode("device0", "blue", new LatLng(42.292671, -71.262174));
+            createNewNode("device1", "red", new LatLng(42.292728, -71.263475));
+            createNewNode("device2", "blue", new LatLng(42.292333, -71.262797));
+            createNewNode("device3", "red", new LatLng(42.293091, -71.2626));
+        }
     }
 
     // scans for a Bluetooth device
@@ -99,13 +113,16 @@ public class MapsActivity extends FragmentActivity {
 
     // adds a new device to Firebase, or updates current device's information
     private void createNewNode(String device, String color, LatLng center) {
-        List<Owner> ownersList = new ArrayList<>();
-        ownersList.add(new Owner("default", 200));
+        List<Owner> thisOwnersList = new ArrayList<>();
+        thisOwnersList.add(new Owner("initialAlly", 150));
+        List<Owner> otherOwnersList = new ArrayList<>();
+        otherOwnersList.add(new Owner("initialEnemy", 50));
 
         HashMap<String, List<Owner>> owners = new HashMap<>();
-        owners.put(color, ownersList);
+        owners.put(color, thisOwnersList);
+        owners.put(Node.getOtherColor(color), otherOwnersList);
 
-        firebaseUtils.pushNode(new Node(device, color, 100, center, owners));
+        firebaseUtils.pushNode(new Node(device, color, 50, center, owners));
     }
 
     // adds a node to list of nodes and draws on map
@@ -126,17 +143,27 @@ public class MapsActivity extends FragmentActivity {
     public void captureNodeByPoints(Node node, int points) {
         CaptureResult result = node.captureByPoints(userName, allyColor, points);
         userPoints += result.getUsedPoints();
+        toastify("you: " + userPoints + "; node: " + node.getColor() + " " + node.getOwnership());
         if (result.getWasCaptured()) {
-//            updateNodeColor(node, allyColor);
+            updateNodeColor(node, allyColor);
             nodes.get(node.getColor()).remove(node);
             nodes.get(allyColor).add(node);
-            firebaseUtils.pushNode(node);
             userPoints += captureBonus;
         }
+        firebaseUtils.pushNode(node);
     }
+
+    public void updateNodeColor(Node node, String newColor) { }
 
     public FirebaseUtils getFirebaseUtils() {
         return firebaseUtils;
+    }
+
+    //    Make sure toasts don't stack (cancel previous toast before creating new one)
+    public void toastify(String text) {
+        if (oldToast != null) oldToast.cancel();
+        oldToast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
+        oldToast.show();
     }
 
     /**
@@ -189,9 +216,19 @@ public class MapsActivity extends FragmentActivity {
                 Node foundNode = checkAllyProximity(location);
                 if (foundNode == null) { foundNode = checkEnemyProximity(location); }
                 if (foundNode == null) { // didn't find a node
+                    if (activeNode != null) {
+                        toastify("left " + activeNode.getDevice());
+                        activeNode = null;
+                    }
+                    Log.i("LOCATION UPDATE", "NOT IN A NODE");
                     mapState = 0;
                     makeInvisible();
                 } else { // found a node
+                    if (!foundNode.equals(activeNode)) {
+                        toastify("entered " + foundNode.getDevice());
+//                        runScanner(foundNode.getDevice());
+                    }
+                    Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
                     activeNode = foundNode;
                 }
             }
@@ -222,12 +259,27 @@ public class MapsActivity extends FragmentActivity {
 
         if (location != null) {
             locationListener.onLocationChanged(location);
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), zoom));
-        } else { //this is just so it zooms in on Olin even if it finds nothing
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(42.2929, -71.2615), zoom));
+            zoomTo(location, zoom);
+        } else { // this is just so it zooms in on Olin even if it finds nothing
+            zoomTo(olin, zoom);
         }
     }
 
+    private void zoomTo(LatLng latLng, int zoom) {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+    }
+
+    private void zoomTo(Node node, int zoom) {
+        zoomTo(node.getCenter(), zoom);
+    }
+
+    private void zoomTo(Location location, int zoom) {
+        zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
+    }
+
+    private void zoomBelowNode() {
+        zoomTo(new LatLng(activeNode.getLat() - 0.00025, activeNode.getLon()), 19);
+    }
 
     //check to see if you're in a node
     private Node checkAllyProximity(Location location){
@@ -235,7 +287,7 @@ public class MapsActivity extends FragmentActivity {
         if (activeNode != null) {
             leave_message.setVisibility(View.VISIBLE);
             take_message.setVisibility(View.VISIBLE);
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(activeNode.getCenter(), 19));
+            zoomTo(activeNode, 19);
             mapState = 1;
         }
         return activeNode;
@@ -261,10 +313,6 @@ public class MapsActivity extends FragmentActivity {
             }
         }
         return null;
-    }
-
-    private void zoomBelowNode() {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(activeNode.getLat() - 0.00025, activeNode.getLon()), 19));
     }
 
     public void initButtons(){
@@ -320,8 +368,8 @@ public class MapsActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 String submit = message.getText().toString();
-                //TODO: change username and deviceID to real values
-                (new FirebaseUtils()).sendMessage(submit, "example_user", "78:A5:04:8C:25:DF");
+                // TODO: change username and deviceID to real values
+                firebaseUtils.sendMessage(submit, userName, "78:A5:04:8C:25:DF");
                 message.setVisibility(View.INVISIBLE);
                 submit_message.setVisibility(View.INVISIBLE);
                 cancel_message.setVisibility(View.INVISIBLE);
@@ -424,15 +472,13 @@ public class MapsActivity extends FragmentActivity {
 
     private void returnIntel(){
         if(intel != null){
-            //TODO: Check distance from intel source
             float[] res = new float[]{0};
             Location.distanceBetween(intel.getLat(), intel.getLon(), activeNode.getLat(), activeNode.getLon(), res);
             int distance = (int) res[0];
-            int influence = 5 + ((int)distance/200);
+            int influence = 5 + distance/200;
             captureNodeByPoints(activeNode, influence);
-            //TODO: Tell Searing about influence
             intel = null;
-            pop_up.setText("Nice Work Agent! You gained"+influence+"Influence over this WhisperSpot");
+            pop_up.setText("Nice Work Agent! You gained "+influence+"I nfluence over this WhisperSpot");
             pop_up.setVisibility(View.VISIBLE);
         }
         else{

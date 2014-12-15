@@ -1,6 +1,7 @@
 package com.example.davelkan.mapv2;
 
 import android.graphics.Color;
+import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -81,7 +82,7 @@ public class Node {
     }
 
     // get color string of opposite color of this node
-    public String getOtherColor(String color) {
+    public static String getOtherColor(String color) {
         if (color.equalsIgnoreCase("red")) return "blue";
         if (color.equalsIgnoreCase("blue")) return "red";
         return "black";
@@ -104,6 +105,7 @@ public class Node {
     // add points to a node by color of capturing team
     public CaptureResult captureByPoints(String userName, String captureColor, int points) {
         // add capturing team's color to list of owners
+        Log.i("CAPTURE EVENT", userName + " captures " + device + " with " + points + " points.");
         if (owners.get(captureColor) == null) {
             owners.put(captureColor, new ArrayList<Owner>());
         }
@@ -130,18 +132,27 @@ public class Node {
             ownership = 100;
         }
 
+        Log.i("CAPTURE EVENT", userName + " uses " + usedPoints + " points at " + device);
+
         // subtract used capture points from other team's list of owners
         List<Owner> otherOwners = owners.get(getOtherColor(captureColor));
         int pointsToRemove = usedPoints;
         while (pointsToRemove > 0) {
             // start removing from beginning of list (oldest owners)
+            if (otherOwners.size() == 0) {
+                Log.i("CAPTURE EVENT", "No one to take points from :(");
+                break;
+            }
             Owner otherOwner = otherOwners.get(0);
             // remove owner if all their points are removed, otherwise decrease their points
+            Log.i("CAPTURE EVENT", userName + " took " + usedPoints + " points from " + otherOwner.getUserName());
             if (pointsToRemove >= otherOwner.getPoints()) {
                 otherOwners.remove(0);
                 pointsToRemove -= otherOwner.getPoints();
+                Log.i("CAPTURE EVENT", otherOwner.getUserName() + " lost all points at " + device);
             } else {
                 otherOwner.subtractPoints(pointsToRemove);
+                pointsToRemove = 0;
             }
         }
 
