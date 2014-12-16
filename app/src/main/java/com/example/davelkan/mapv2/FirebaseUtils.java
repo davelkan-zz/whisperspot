@@ -61,6 +61,13 @@ public class FirebaseUtils {
         });
     }
 
+    public void createUser(String username, String color) {
+        HashMap<String, String> user = new HashMap<String, String>();
+        user.put("created", timestamp());
+        user.put("color", color);
+        firebase.child("users").child(username).setValue(user);
+    }
+
     // pulls list of node data from firebase and creates Node objects for each
     public void populateNodes(final MapsActivity activity) {
         Firebase dataRef = firebase.child("nodes");
