@@ -5,6 +5,7 @@ import android.widget.TextView;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.FirebaseException;
 import com.firebase.client.ValueEventListener;
 
 import java.text.SimpleDateFormat;
@@ -52,7 +53,11 @@ public class FirebaseUtils {
         dataRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                activity.updateNode(node, snapshot.getValue(RawNode.class));
+                try {
+                    activity.updateNode(node, snapshot.getValue(RawNode.class));
+                } catch (FirebaseException e) {
+                    Log.i("FIREBASE PULL", e.toString());
+                }
             }
 
             @Override
@@ -75,8 +80,12 @@ public class FirebaseUtils {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 for (DataSnapshot child : snapshot.getChildren()) {
-                    Node node = new Node(child.getValue(RawNode.class), child.getKey());
-                    activity.addNode(node);
+                    try {
+                        Node node = new Node(child.getValue(RawNode.class), child.getKey());
+                        activity.addNode(node);
+                    } catch (FirebaseException e) {
+                        Log.i("FIREBASE POPULATE", e.toString());
+                    }
                 }
             }
 
