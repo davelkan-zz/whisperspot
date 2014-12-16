@@ -2,6 +2,7 @@ package com.example.davelkan.mapv2;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -16,6 +17,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashSet;
 import java.util.Random;
 
 import com.firebase.client.Firebase;
@@ -31,6 +33,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public class MapsActivity extends FragmentActivity {
     private String TAG = "MapsActivity";
@@ -47,9 +50,10 @@ public class MapsActivity extends FragmentActivity {
     private int captureBonus = 10;
     public Node activeNode;
     private Node intel = null;
-    private Location sink;
     private Toast oldToast = null;
     private LatLng olin = new LatLng(42.2929, -71.2615);
+    private SharedPreferences preferences;
+    private Set<String> visitedNodes;
 
     Button leave_message;
     Button take_message;
@@ -72,8 +76,9 @@ public class MapsActivity extends FragmentActivity {
         Firebase.setAndroidContext(this);
         setupFirebase();
         initButtons();
+        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
+        visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
         setUpMapIfNeeded();
-//        runScanner("78:A5:04:8C:25:DF");
     }
 
     @Override
@@ -134,6 +139,12 @@ public class MapsActivity extends FragmentActivity {
         }
         nodes.get(node.getColor()).add(node);
 
+        if (visitedNodes.contains(node.getDevice())) {
+            drawNode(node);
+        }
+    }
+
+    public void drawNode(Node node) {
         mMap.addCircle(new CircleOptions()
                 .center(node.getCenter())
                 .radius(25)
@@ -265,6 +276,12 @@ public class MapsActivity extends FragmentActivity {
             makeInvisible();
         } else { // found a node
             if (!foundNode.equals(activeNode)) {
+                if (!visitedNodes.contains(foundNode.getDevice())) {
+                    visitedNodes.add(foundNode.getDevice());
+                    preferences.edit().remove("visitedNodes").apply();
+                    preferences.edit().putStringSet("visitedNodes", visitedNodes).apply();
+                    drawNode(foundNode);
+                }
                 toastify("entered " + foundNode.getDevice());
                 firebaseUtils.updateNode(this, foundNode);
                 //  activity.runScanner(foundNode.getDevice());
