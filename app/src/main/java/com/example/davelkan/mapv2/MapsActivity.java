@@ -42,10 +42,7 @@ public class MapsActivity extends FragmentActivity {
     private BLEScanner scanner;
     private FirebaseUtils firebaseUtils;
     private HashMap<String, List<Node>> nodes = new HashMap<>();
-    private String allyColor = "blue";
-    private String enemyColor = "red";
-    private String userName = "Ralph";
-    private int userPoints = 0; // TODO: store this in Firebase
+    private User user;
     private int captureBonus = 10;
     private Node activeNode;
     private Node intel = null;
@@ -75,6 +72,7 @@ public class MapsActivity extends FragmentActivity {
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
 //        preferences.edit().remove("visitedNodes").apply();
         visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
+        initUser();
         setUpMapIfNeeded();
     }
 
@@ -88,6 +86,13 @@ public class MapsActivity extends FragmentActivity {
         super.onResume();
         setUpMapIfNeeded();
         updatePoints();
+    }
+
+    private void initUser() {
+        String userName = preferences.getString("username", "Ralph");
+        String color = preferences.getString("color", "default");
+        user = new User(userName, color);
+        firebaseUtils.retrieveUser(userName, user, preferences);
     }
 
     // create Firebase reference and pull node data from it
@@ -162,14 +167,15 @@ public class MapsActivity extends FragmentActivity {
 
     // tells node that this user is trying to capture it
     public void captureNodeByPoints(Node node, int points) {
-        CaptureResult result = node.captureByPoints(userName, allyColor, points);
-        userPoints += result.getUsedPoints();
-        toastify("you: " + userPoints + "; node: " + node.getColor() + " " + node.getOwnership());
+        CaptureResult result = node.captureByPoints(user.getName(), user.getColor(), points);
+        user.addPoints(result.getUsedPoints());
         if (result.getWasCaptured()) {
-            updateNodeColor(node, allyColor);
-            userPoints += captureBonus;
+            updateNodeColor(node, user.getColor());
+            user.addPoints(captureBonus);
         }
+        toastify("you: " + user.getPoints() + "; node: " + node.getColor() + " " + node.getOwnership());
         firebaseUtils.pushNode(node);
+        firebaseUtils.pushUser(user);
     }
 
     public void updateNodeColor(Node node, String newColor) {
@@ -317,7 +323,7 @@ public class MapsActivity extends FragmentActivity {
 
     //check to see if you're in a node
     public Node checkAllyProximity(LatLng latLng) {
-        Node activeNode = checkProximity(nodes.get(allyColor), latLng);
+        Node activeNode = checkProximity(nodes.get(user.getColor()), latLng);
         if (activeNode != null) {
             leave_intel.setVisibility(View.VISIBLE);
             take_intel.setVisibility(View.VISIBLE);
@@ -328,7 +334,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public Node checkEnemyProximity(LatLng latLng) {
-        Node activeNode = checkProximity(nodes.get(enemyColor), latLng);
+        Node activeNode = checkProximity(nodes.get(user.getEnemyColor()), latLng);
         if (activeNode != null) {
             //leave_trap.setVisibility(View.VISIBLE);
             decrypt_intel.setVisibility(View.VISIBLE);
@@ -429,7 +435,7 @@ public class MapsActivity extends FragmentActivity {
         if (activeNode == null) {
             pop_up.setText("Return to the node to gather intel!");
             pop_up.setVisibility(View.VISIBLE);
-        } else if (activeNode.getColor().equalsIgnoreCase(allyColor)) {
+        } else if (activeNode.getColor().equalsIgnoreCase(user.getColor())) {
             if (intel == null) {
                 pop_up.setText("Intel Gathered!  Deliver it to another WhisperSpot!");
                 pop_up.setVisibility(View.VISIBLE);
@@ -450,7 +456,7 @@ public class MapsActivity extends FragmentActivity {
         if (activeNode == null) {
             pop_up.setText("Return to the node to decrypt intel!");
             pop_up.setVisibility(View.VISIBLE);
-        } else if (activeNode.getColor().equalsIgnoreCase(enemyColor)) {
+        } else if (activeNode.getColor().equalsIgnoreCase(user.getEnemyColor())) {
             if (intel == null && decryptCounter()) {
                 Random rand = new Random();
                 int odds = rand.nextInt(100);
