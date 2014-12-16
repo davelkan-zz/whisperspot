@@ -284,6 +284,8 @@ public class MapsActivity extends FragmentActivity {
         if (foundNode == null) foundNode = checkEnemyProximity(latLng);
         if (activeNode != null && activeNode != foundNode) {
             toastify("left " + activeNode.getDevice());
+            mapState = 0;
+            makeInvisible();
         }
         if (foundNode == null) { // didn't find a node
             activeNode = null;
@@ -291,7 +293,13 @@ public class MapsActivity extends FragmentActivity {
             mapState = 0;
             makeInvisible();
         } else { // found a node
+            if (foundNode.getColor().equals(user.getColor())) {
+                mapState = 1;
+            } else {
+                mapState = 2;
+            }
             if (!foundNode.equals(activeNode)) {
+                zoomTo(foundNode, 19);
                 if (!visitedNodes.contains(foundNode.getDevice())) {
                     visitedNodes.add(foundNode.getDevice());
                     preferences.edit().remove("visitedNodes").apply();
@@ -305,7 +313,10 @@ public class MapsActivity extends FragmentActivity {
             Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
             activeNode = foundNode;
         }
+        displayButtons(mapState);
     }
+
+
 
     private void zoomTo(LatLng latLng, int zoom) {
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
@@ -325,24 +336,11 @@ public class MapsActivity extends FragmentActivity {
 
     //check to see if you're in a node
     public Node checkAllyProximity(LatLng latLng) {
-        Node activeNode = checkProximity(nodes.get(user.getColor()), latLng);
-        if (activeNode != null) {
-            leave_intel.setVisibility(View.VISIBLE);
-            take_intel.setVisibility(View.VISIBLE);
-            zoomTo(activeNode, 19);
-            mapState = 1;
-        }
-        return activeNode;
+        return checkProximity(nodes.get(user.getColor()), latLng);
     }
 
     public Node checkEnemyProximity(LatLng latLng) {
-        Node activeNode = checkProximity(nodes.get(user.getEnemyColor()), latLng);
-        if (activeNode != null) {
-            //leave_trap.setVisibility(View.VISIBLE);
-            decrypt_intel.setVisibility(View.VISIBLE);
-            mapState = 1;
-        }
-        return activeNode;
+        return checkProximity(nodes.get(user.getEnemyColor()), latLng);
     }
 
     private Node checkProximity(List<Node> nodes, LatLng latLng) {
@@ -353,7 +351,7 @@ public class MapsActivity extends FragmentActivity {
             return null;
         }
         for (Node activeNode : nodes) {
-            if (getDistance(activeNode.getCenter(), latLng) < 25 && mapState < 2) {
+            if (getDistance(activeNode.getCenter(), latLng) < 25) {
                 System.out.print("in Range");
                 return activeNode;
             }
@@ -377,32 +375,24 @@ public class MapsActivity extends FragmentActivity {
         leave_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //cancel_message.setVisibility(View.VISIBLE);
-                //submit_message.setVisibility(View.VISIBLE);
-                //message.setVisibility(View.VISIBLE);
-                take_intel.setVisibility(View.INVISIBLE);
-                leave_intel.setVisibility(View.INVISIBLE);
-                mapState = 2;
+                mapState = 3;
+                displayButtons(mapState);
                 returnIntel();
-
-                //zoomBelowNode();
             }
         });
        take_intel.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View v) {
-               take_intel.setVisibility(View.INVISIBLE);
-               leave_intel.setVisibility(View.INVISIBLE);
-               mapState = 2;
-               //display_message.setText("");
-               //display_message.setVisibility(View.VISIBLE);
-               //(new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
+               mapState = 3;
+               displayButtons(mapState);
                gatherIntel();
            }
        });
         decrypt_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mapState = 4;
+                displayButtons(mapState);
                 decryptIntel();
             }
         });
@@ -416,9 +406,21 @@ public class MapsActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 pop_up.setVisibility(View.INVISIBLE);
-                //leave_message.setVisibility(View.VISIBLE);
             }
         });
+    }
+
+    private void displayButtons(int state) {
+        makeInvisible(); //Start from scratch, only enable buttons
+        if (state == 0) { //Not in a node, no buttons
+        } else if (state == 1) { //In an ally Node
+            leave_intel.setVisibility(View.VISIBLE);
+            take_intel.setVisibility(View.VISIBLE);
+        } else if (state == 2) { //In an enemy Node
+            decrypt_intel.setVisibility(View.VISIBLE);
+        } else if (state == 3) { //Just left or took intel, no buttons
+        } else if (state == 4) { //Just attempted to decrypt, no buttons
+        }
     }
 
     public void makeInvisible() {
