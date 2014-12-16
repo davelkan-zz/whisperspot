@@ -147,14 +147,16 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void drawNode(Node node) {
-        mMap.addCircle(new CircleOptions()
-                .center(node.getCenter())
-                .radius(25)
-//                .strokeColor(Color.TRANSPARENT)
-                .strokeColor(node.getAllyColor())
-//                .strokeColor(node.getEnemyColor())
-//                .fillColor(node.getAllyColor()));
-                .fillColor(Color.TRANSPARENT));
+        if (mMap != null) {
+            mMap.addCircle(new CircleOptions()
+                    .center(node.getCenter())
+                    .radius(25)
+//                  .strokeColor(Color.TRANSPARENT)
+                    .strokeColor(node.getAllyColor())
+//                  .strokeColor(node.getEnemyColor())
+//                  .fillColor(node.getAllyColor()));
+                    .fillColor(Color.TRANSPARENT));
+        }
     }
 
     // updates a node's information with new data
