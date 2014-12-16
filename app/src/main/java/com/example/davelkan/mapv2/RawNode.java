@@ -1,5 +1,7 @@
 package com.example.davelkan.mapv2;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,6 +36,10 @@ public class RawNode {
     }
     public HashMap<String, List<Owner>> getOwners() {
         return owners;
+    }
+
+    public LatLng getCenter() {
+        return new LatLng(lat, lon);
     }
 
     public void setColor(String color) {

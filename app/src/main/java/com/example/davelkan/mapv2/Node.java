@@ -17,15 +17,15 @@ public class Node {
     private HashMap<String, List<Owner>> owners = new HashMap<>();
 
     public Node() {
-        center = new LatLng(0, 0);
-        owners = new HashMap<>();
+        this.center = new LatLng(0, 0);
+        this.owners = new HashMap<>();
     }
 
     public Node(RawNode rawNode, String device) {
         this.device = device;
         this.color = rawNode.getColor();
         this.ownership = rawNode.getOwnership();
-        this.center = new LatLng(rawNode.getLat(), rawNode.getLon());
+        this.center = rawNode.getCenter();
         this.owners = rawNode.getOwners();
     }
 
@@ -59,6 +59,9 @@ public class Node {
     public void setCenter(LatLng center) {
         this.center = center;
     }
+    public void setOwners(HashMap<String, List<Owner>> owners) {
+        this.owners = owners;
+    }
 
     public String getDevice() {
         return device;
@@ -74,6 +77,9 @@ public class Node {
     }
     public LatLng getCenter() {
         return center;
+    }
+    public HashMap<String, List<Owner>> getOwners() {
+        return owners;
     }
 
     // get color string of color of this node
@@ -102,7 +108,15 @@ public class Node {
         return Color.BLACK;
     }
 
-    // add points to a node by color of capturing team
+    // update this node's information with new data
+    public void update(RawNode data) {
+        setColor(data.getColor());
+        setOwnership(data.getOwnership());
+        setCenter(data.getCenter());
+        setOwners(data.getOwners());
+    }
+
+    // add points to this node by color of capturing team
     public CaptureResult captureByPoints(String userName, String captureColor, int points) {
         // add capturing team's color to list of owners
         Log.i("CAPTURE EVENT", userName + " captures " + device + " with " + points + " points.");

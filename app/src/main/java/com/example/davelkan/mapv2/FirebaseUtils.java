@@ -46,6 +46,21 @@ public class FirebaseUtils {
         firebase.child("nodes").child(node.getDevice()).setValue(node.getRawNode());
     }
 
+    // requests update in information of a single node
+    public void updateNode(final MapsActivity activity, final Node node) {
+        Firebase dataRef = firebase.child("nodes").child(node.getDevice());
+        dataRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                activity.updateNode(node, snapshot.getValue(RawNode.class));
+            }
+
+            @Override
+            public void onCancelled(FirebaseError error) {
+            }
+        });
+    }
+
     // pulls list of node data from firebase and creates Node objects for each
     public void populateNodes(final MapsActivity activity) {
         Firebase dataRef = firebase.child("nodes");

@@ -2,6 +2,7 @@ package com.example.davelkan.mapv2;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.util.Random;
 
 import com.firebase.client.Firebase;
@@ -33,17 +35,17 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity {
     private String TAG = "MapsActivity";
     public String APP_NAME = "Whisperspot";
-    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    public GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private BLEScanner scanner;
-    private FirebaseUtils firebaseUtils;
+    public FirebaseUtils firebaseUtils;
     private HashMap<String, List<Node>> nodes = new HashMap<>();
     private String allyColor = "blue";
     private String enemyColor = "red";
     private String userName = "Ralph";
     private int userPoints = 0; // TODO: store this in Firebase
     private int captureBonus = 10;
-    private Node activeNode;
+    public Node activeNode;
     private Node intel = null;
     private Location sink;
     private Toast oldToast = null;
@@ -59,7 +61,7 @@ public class MapsActivity extends FragmentActivity {
     TextView pop_up;
     EditText message;
     int mapState = 0;
-    Marker myLocation;
+    public Marker myLocation;
     int zoom = 17;
 
     @Override
@@ -98,8 +100,8 @@ public class MapsActivity extends FragmentActivity {
         if (confirm) {
             createNewNode("BC:6A:29:AE:DA:C1", "blue", new LatLng(42.293307, -71.263748));
             createNewNode("78:A5:04:8C:25:DF", "red", new LatLng(42.29372, -71.264478));
-            createNewNode("device0", "blue", new LatLng(42.292671, -71.262174));
-            createNewNode("device1", "red", new LatLng(42.292728, -71.263475));
+            createNewNode("D4:0E:28:2D:C5:B2", "blue", new LatLng(42.292671, -71.262174));
+            createNewNode("CD:19:99:D7:B5:8E", "red", new LatLng(42.292728, -71.263475));
             createNewNode("device2", "blue", new LatLng(42.292333, -71.262797));
             createNewNode("device3", "red", new LatLng(42.293091, -71.2626));
         }
@@ -127,33 +129,47 @@ public class MapsActivity extends FragmentActivity {
 
     // adds a node to list of nodes and draws on map
     public void addNode(Node node) {
-        if(nodes.get(node.getColor()) == null) {
+        if (nodes.get(node.getColor()) == null) {
             nodes.put(node.getColor(), new ArrayList<Node>());
         }
-
-        // TODO: be able to update node color
         nodes.get(node.getColor()).add(node);
+
         mMap.addCircle(new CircleOptions()
                 .center(node.getCenter())
                 .radius(25)
-                .strokeColor(node.getEnemyColor())
+                .strokeColor(Color.TRANSPARENT)
+//                .strokeColor(node.getEnemyColor())
                 .fillColor(node.getAllyColor()));
     }
 
+    // updates a node's information with new data
+    public void updateNode(Node node, RawNode data) {
+        if (!node.getColor().equalsIgnoreCase(data.getColor())) { // new color
+            updateNodeColor(node, node.getColor());
+        }
+        node.update(data);
+    }
+
+    // tells node that this user is trying to capture it
     public void captureNodeByPoints(Node node, int points) {
         CaptureResult result = node.captureByPoints(userName, allyColor, points);
         userPoints += result.getUsedPoints();
         toastify("you: " + userPoints + "; node: " + node.getColor() + " " + node.getOwnership());
         if (result.getWasCaptured()) {
             updateNodeColor(node, allyColor);
-            nodes.get(node.getColor()).remove(node);
-            nodes.get(allyColor).add(node);
             userPoints += captureBonus;
         }
         firebaseUtils.pushNode(node);
     }
 
-    public void updateNodeColor(Node node, String newColor) { }
+    public void updateNodeColor(Node node, String newColor) {
+        if (nodes.get(newColor) == null) { // add new color to nodes information
+            nodes.put(newColor, new ArrayList<Node>());
+        }
+        nodes.get(node.getColor()).remove(node);
+        nodes.get(newColor).add(node);
+        // TODO: reflect color change on map
+    }
 
     public FirebaseUtils getFirebaseUtils() {
         return firebaseUtils;
@@ -170,12 +186,12 @@ public class MapsActivity extends FragmentActivity {
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
      * installed) and the map has not already been instantiated.. This will ensure that we only ever
      * call {@link #setUpMap()} once when {@link #mMap} is not null.
-     * <p>
+     * <p/>
      * If it isn't installed {@link SupportMapFragment} (and
      * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
      * install/update the Google Play services APK
      * on their device.
-     * <p>
+     * <p/>
      * A user can return to this FragmentActivity after following the prompt and correctly
      * installing/updating/enabling the Google Play services. Since the FragmentActivity may not
      * have been completely destroyed during this process (it is likely that it would only be
@@ -185,8 +201,8 @@ public class MapsActivity extends FragmentActivity {
     private void setUpMapIfNeeded() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        if(!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER )) {
-            Intent myIntent = new Intent( Settings.ACTION_LOCATION_SOURCE_SETTINGS );
+        if (!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
+            Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             Toast.makeText(this, "Please enable GPS for " + APP_NAME + " to work properly.", Toast.LENGTH_LONG).show();
             startActivity(myIntent);
             return;
@@ -204,52 +220,17 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
-    LocationListener locationListener = new LocationListener() {
-        public void onLocationChanged(Location location) {
-            // Called when a new location is found by the network location provider.
-            if (location != null) {
-                if (myLocation != null) {
-                    myLocation.remove();
-                }
-                //TODO:Check if near undiscovered node only display those known
-                myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("My Position"));
-                Node foundNode = checkAllyProximity(location);
-                if (foundNode == null) { foundNode = checkEnemyProximity(location); }
-                if (foundNode == null) { // didn't find a node
-                    if (activeNode != null) {
-                        toastify("left " + activeNode.getDevice());
-                        activeNode = null;
-                    }
-                    Log.i("LOCATION UPDATE", "NOT IN A NODE");
-                    mapState = 0;
-                    makeInvisible();
-                } else { // found a node
-                    if (!foundNode.equals(activeNode)) {
-                        toastify("entered " + foundNode.getDevice());
-//                        runScanner(foundNode.getDevice());
-                    }
-                    Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
-                    activeNode = foundNode;
-                }
-            }
-        }
-
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-        public void onProviderEnabled(String provider) {}
-
-        public void onProviderDisabled(String provider) {}
-    };
-
-     /**
+    /**
      * This is where we can add markers or lines, add listeners or move the camera. In this case, we
      * just add a marker near my bedroom.
-     * <p>
+     * <p/>
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
+
+        LocationListener locationListener = Listeners.getLocationListener(this);
 
         // Get the location manager
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -265,6 +246,34 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
+    public void updateLocation(LatLng latLng) {
+        if (myLocation != null) {
+            myLocation.remove();
+        }
+        // TODO: Check if near undiscovered node only display those known
+        myLocation = mMap.addMarker(new MarkerOptions().position(latLng).title("My Position"));
+
+        Node foundNode = checkAllyProximity(latLng);
+        if (foundNode == null) foundNode = checkEnemyProximity(latLng);
+        if (foundNode == null) { // didn't find a node
+            if (activeNode != null) {
+                toastify("left " + activeNode.getDevice());
+                activeNode = null;
+            }
+            Log.i("LOCATION UPDATE", "NOT IN A NODE");
+            mapState = 0;
+            makeInvisible();
+        } else { // found a node
+            if (!foundNode.equals(activeNode)) {
+                toastify("entered " + foundNode.getDevice());
+                firebaseUtils.updateNode(this, foundNode);
+                //  activity.runScanner(foundNode.getDevice());
+            }
+            Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
+            activeNode = foundNode;
+        }
+    }
+
     private void zoomTo(LatLng latLng, int zoom) {
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
     }
@@ -277,13 +286,13 @@ public class MapsActivity extends FragmentActivity {
         zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
     }
 
-    private void zoomBelowNode() {
-        zoomTo(new LatLng(activeNode.getLat() - 0.00025, activeNode.getLon()), 19);
+    private void zoomBelow(Node node) {
+        zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
     }
 
     //check to see if you're in a node
-    private Node checkAllyProximity(Location location){
-        Node activeNode = checkProximity(nodes.get(allyColor), location);
+    public Node checkAllyProximity(LatLng latLng) {
+        Node activeNode = checkProximity(nodes.get(allyColor), latLng);
         if (activeNode != null) {
             leave_message.setVisibility(View.VISIBLE);
             take_message.setVisibility(View.VISIBLE);
@@ -293,8 +302,8 @@ public class MapsActivity extends FragmentActivity {
         return activeNode;
     }
 
-    private Node checkEnemyProximity(Location location){
-        Node activeNode = checkProximity(nodes.get(enemyColor), location);
+    public Node checkEnemyProximity(LatLng latLng) {
+        Node activeNode = checkProximity(nodes.get(enemyColor), latLng);
         if (activeNode != null) {
             leave_trap.setVisibility(View.VISIBLE);
             decrypt_message.setVisibility(View.VISIBLE);
@@ -303,11 +312,15 @@ public class MapsActivity extends FragmentActivity {
         return activeNode;
     }
 
-    private Node checkProximity(List<Node> nodes, Location location) {
-        if (nodes == null) { return null; }
-        if (location == null) { return null; }
-        for(Node activeNode : nodes) {
-            if (isClose(activeNode, location) && mapState < 2) {
+    private Node checkProximity(List<Node> nodes, LatLng latLng) {
+        if (nodes == null) {
+            return null;
+        }
+        if (latLng == null) {
+            return null;
+        }
+        for (Node activeNode : nodes) {
+            if (getDistance(activeNode.getCenter(), latLng) < 25 && mapState < 2) {
                 System.out.print("in Range");
                 return activeNode;
             }
@@ -315,7 +328,13 @@ public class MapsActivity extends FragmentActivity {
         return null;
     }
 
-    public void initButtons(){
+    private float getDistance(LatLng start, LatLng end) {
+        float[] res = new float[]{0};
+        Location.distanceBetween(start.latitude, start.longitude, end.latitude, end.longitude, res);
+        return res[0];
+    }
+
+    public void initButtons() {
         leave_message = (Button) findViewById(R.id.lvmsg);
         take_message = (Button) findViewById(R.id.tkmsg);
         leave_trap = (Button) findViewById(R.id.lvtrp);
@@ -364,12 +383,11 @@ public class MapsActivity extends FragmentActivity {
 
             }
         });
-        submit_message.setOnClickListener(new View.OnClickListener(){
+        submit_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String submit = message.getText().toString();
-                // TODO: change username and deviceID to real values
-                firebaseUtils.sendMessage(submit, userName, "78:A5:04:8C:25:DF");
+                firebaseUtils.sendMessage(submit, userName, activeNode.getDevice());
                 message.setVisibility(View.INVISIBLE);
                 submit_message.setVisibility(View.INVISIBLE);
                 cancel_message.setVisibility(View.INVISIBLE);
@@ -378,7 +396,7 @@ public class MapsActivity extends FragmentActivity {
                 mapState = 1;
             }
         });
-        cancel_message.setOnClickListener(new View.OnClickListener(){
+        cancel_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 message.setVisibility(View.INVISIBLE);
@@ -389,7 +407,7 @@ public class MapsActivity extends FragmentActivity {
                 mapState = 1;
             }
         });
-        pop_up.setOnClickListener(new View.OnClickListener(){
+        pop_up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 pop_up.setVisibility(View.INVISIBLE);
@@ -398,7 +416,7 @@ public class MapsActivity extends FragmentActivity {
         });
     }
 
-    public void makeInvisible(){
+    public void makeInvisible() {
         leave_trap.setVisibility(View.INVISIBLE);
         decrypt_message.setVisibility(View.INVISIBLE);
         message.setVisibility(View.INVISIBLE);
@@ -406,21 +424,15 @@ public class MapsActivity extends FragmentActivity {
         cancel_message.setVisibility(View.INVISIBLE);
     }
 
-    private void updatePoints(){
+    private void updatePoints() {
         System.out.print("words");
     }
 
-    public boolean isClose(Node start, Location location) {
-        Location startLoc = new Location(location);
-        startLoc.setLatitude(start.getLat());
-        startLoc.setLongitude(start.getLon());
-
-        return (startLoc.distanceTo(location) < 25);
-        //return(true);
-    }
-
-    private void gatherIntel() { //gathering intel at allied node... checking node color may be unnecessary
-        if(activeNode.getColor().equalsIgnoreCase(allyColor)) {
+    private void gatherIntel() { // gathering intel at allied node... checking node color may be unnecessary
+        if (activeNode == null) {
+            pop_up.setText("Return to the node to gather intel!");
+            pop_up.setVisibility(View.VISIBLE);
+        } else if (activeNode.getColor().equalsIgnoreCase(allyColor)) {
             if (intel == null) {
                 pop_up.setText("Intel Gathered!  Deliver it to another WhisperSpot!");
                 pop_up.setVisibility(View.VISIBLE);
@@ -430,8 +442,7 @@ public class MapsActivity extends FragmentActivity {
                 pop_up.setText("You may only carry 1 intel at a time.");
                 pop_up.setVisibility(View.VISIBLE);
             }
-        }
-        else{
+        } else {
             pop_up.setText("This is enemy territory! You have to decrypt intel here!");
             pop_up.setVisibility(View.VISIBLE);
         }
@@ -439,7 +450,10 @@ public class MapsActivity extends FragmentActivity {
 
     //decrypt intel at enemy node
     private void decryptIntel() {
-        if(activeNode.getColor().equalsIgnoreCase(enemyColor)) {
+        if (activeNode == null) {
+            pop_up.setText("Return to the node to decrypt intel!");
+            pop_up.setVisibility(View.VISIBLE);
+        } else if (activeNode.getColor().equalsIgnoreCase(enemyColor)) {
             if (intel == null && decryptCounter()) {
                 //TODO: Functionality - Report that Intel gathered
                 //TODO: factor in influence for probability
@@ -447,49 +461,45 @@ public class MapsActivity extends FragmentActivity {
                 int odds = rand.nextInt(10);
                 if (odds > 5) {
                     intel = activeNode;
-                    pop_up.setText("Intel Decrytped!  Deliver it to another WhisperSpot!");
+                    pop_up.setText("Intel Decrypted!  Deliver it to another WhisperSpot!");
                     pop_up.setVisibility(View.VISIBLE);
-                }
-                else{
+                } else {
                     pop_up.setText("Your cover was blown while decrypting message! You need to lay low for a bit!");
                     pop_up.setVisibility(View.VISIBLE);
                 }
-            }
-            else if (!decryptCounter()) {
+            } else if (!decryptCounter()) {
                 pop_up.setText("Your cover is blown here! You need to lay low for a bit!");
                 pop_up.setVisibility(View.VISIBLE);
             } else if (intel != null) {
                 pop_up.setText("You may only carry 1 intel at a time.");
                 pop_up.setVisibility(View.VISIBLE);
             }
-        }
-
-        else{
+        } else {
             pop_up.setText("You don't need to decrypt intel at allied WhisperSpots");
             pop_up.setVisibility(View.VISIBLE);
         }
     }
 
-    private void returnIntel(){
-        if(intel != null){
-            float[] res = new float[]{0};
-            Location.distanceBetween(intel.getLat(), intel.getLon(), activeNode.getLat(), activeNode.getLon(), res);
-            int distance = (int) res[0];
-            int influence = 5 + distance/200;
+    private void returnIntel() {
+        if (intel == null) {
+            pop_up.setText("You poor ignorant fool. You have no Intel to offer.");
+            pop_up.setVisibility(View.VISIBLE);
+        } else if (activeNode == null) {
+            pop_up.setText("Return to the node to return intel!");
+            pop_up.setVisibility(View.VISIBLE);
+        } else {
+            int distance = (int) getDistance(intel.getCenter(), activeNode.getCenter());
+
+            int influence = 5 + distance / 200;
             captureNodeByPoints(activeNode, influence);
             intel = null;
-            pop_up.setText("Nice Work Agent! You gained "+influence+"I nfluence over this WhisperSpot");
-            pop_up.setVisibility(View.VISIBLE);
-        }
-        else{
-            pop_up.setText("You poor ignorant fool. You have no Intel to offer.");
+            pop_up.setText("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
             pop_up.setVisibility(View.VISIBLE);
         }
     }
 
 
-
-    private boolean decryptCounter(){  //counter to stop users trying to decrypt too frequently
+    private boolean decryptCounter() {  //counter to stop users trying to decrypt too frequently
         return true;
     }
 }
