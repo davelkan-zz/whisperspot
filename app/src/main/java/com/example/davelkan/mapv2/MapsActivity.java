@@ -55,15 +55,11 @@ public class MapsActivity extends FragmentActivity {
     private SharedPreferences preferences;
     private Set<String> visitedNodes;
 
-    Button leave_message;
-    Button take_message;
+    Button leave_intel;
+    Button take_intel;
     Button leave_trap;
-    Button decrypt_message;
-    Button submit_message;
-    Button cancel_message;
-    TextView display_message;
+    Button decrypt_intel;
     TextView pop_up;
-    EditText message;
     int mapState = 0;
     public Marker myLocation;
     int zoom = 17;
@@ -311,8 +307,8 @@ public class MapsActivity extends FragmentActivity {
     public Node checkAllyProximity(LatLng latLng) {
         Node activeNode = checkProximity(nodes.get(allyColor), latLng);
         if (activeNode != null) {
-            leave_message.setVisibility(View.VISIBLE);
-            take_message.setVisibility(View.VISIBLE);
+            leave_intel.setVisibility(View.VISIBLE);
+            take_intel.setVisibility(View.VISIBLE);
             zoomTo(activeNode, 19);
             mapState = 1;
         }
@@ -322,8 +318,8 @@ public class MapsActivity extends FragmentActivity {
     public Node checkEnemyProximity(LatLng latLng) {
         Node activeNode = checkProximity(nodes.get(enemyColor), latLng);
         if (activeNode != null) {
-            leave_trap.setVisibility(View.VISIBLE);
-            decrypt_message.setVisibility(View.VISIBLE);
+            //leave_trap.setVisibility(View.VISIBLE);
+            decrypt_intel.setVisibility(View.VISIBLE);
             mapState = 1;
         }
         return activeNode;
@@ -352,46 +348,42 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void initButtons() {
-        leave_message = (Button) findViewById(R.id.lvmsg);
-        take_message = (Button) findViewById(R.id.tkmsg);
+        leave_intel = (Button) findViewById(R.id.lvmsg);
+        take_intel = (Button) findViewById(R.id.tkmsg);
         leave_trap = (Button) findViewById(R.id.lvtrp);
-        decrypt_message = (Button) findViewById(R.id.dcptmsg);
-        message = (EditText) findViewById(R.id.message);
-        display_message = (TextView) findViewById(R.id.message_display);
-        submit_message = (Button) findViewById(R.id.sbmtmsg);
-        cancel_message = (Button) findViewById(R.id.cnclmsg);
+        decrypt_intel = (Button) findViewById(R.id.dcptmsg);
         pop_up = (TextView) findViewById(R.id.popUp);
 
-        leave_message.setOnClickListener(new View.OnClickListener() {
+        leave_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //cancel_message.setVisibility(View.VISIBLE);
                 //submit_message.setVisibility(View.VISIBLE);
                 //message.setVisibility(View.VISIBLE);
-                take_message.setVisibility(View.INVISIBLE);
-                leave_message.setVisibility(View.INVISIBLE);
+                take_intel.setVisibility(View.INVISIBLE);
+                leave_intel.setVisibility(View.INVISIBLE);
                 mapState = 2;
                 returnIntel();
 
                 //zoomBelowNode();
             }
         });
-        take_message.setOnClickListener(new View.OnClickListener() {
+       take_intel.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View v) {
+               take_intel.setVisibility(View.INVISIBLE);
+               leave_intel.setVisibility(View.INVISIBLE);
+               mapState = 2;
+               //display_message.setText("");
+               //display_message.setVisibility(View.VISIBLE);
+               //(new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
+               gatherIntel();
+           }
+       });
+        decrypt_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                take_message.setVisibility(View.INVISIBLE);
-                leave_message.setVisibility(View.INVISIBLE);
-                mapState = 2;
-                //display_message.setText("");
-                //display_message.setVisibility(View.VISIBLE);
-                //(new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
-                gatherIntel();
-            }
-        });
-        decrypt_message.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
+                decryptIntel();
             }
         });
         leave_trap.setOnClickListener(new View.OnClickListener() {
@@ -400,45 +392,21 @@ public class MapsActivity extends FragmentActivity {
 
             }
         });
-        submit_message.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String submit = message.getText().toString();
-                firebaseUtils.sendMessage(submit, userName, activeNode.getDevice());
-                message.setVisibility(View.INVISIBLE);
-                submit_message.setVisibility(View.INVISIBLE);
-                cancel_message.setVisibility(View.INVISIBLE);
-                take_message.setVisibility(View.VISIBLE);
-                leave_message.setVisibility(View.VISIBLE);
-                mapState = 1;
-            }
-        });
-        cancel_message.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                message.setVisibility(View.INVISIBLE);
-                submit_message.setVisibility(View.INVISIBLE);
-                cancel_message.setVisibility(View.INVISIBLE);
-                take_message.setVisibility(View.VISIBLE);
-                leave_message.setVisibility(View.VISIBLE);
-                mapState = 1;
-            }
-        });
         pop_up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 pop_up.setVisibility(View.INVISIBLE);
-                leave_message.setVisibility(View.VISIBLE);
+                //leave_message.setVisibility(View.VISIBLE);
             }
         });
     }
 
     public void makeInvisible() {
         leave_trap.setVisibility(View.INVISIBLE);
-        decrypt_message.setVisibility(View.INVISIBLE);
-        message.setVisibility(View.INVISIBLE);
-        submit_message.setVisibility(View.INVISIBLE);
-        cancel_message.setVisibility(View.INVISIBLE);
+        decrypt_intel.setVisibility(View.INVISIBLE);
+        leave_intel.setVisibility(View.INVISIBLE);
+        take_intel.setVisibility(View.INVISIBLE);
+        pop_up.setVisibility(View.INVISIBLE);
     }
 
     private void updatePoints() {
@@ -472,11 +440,10 @@ public class MapsActivity extends FragmentActivity {
             pop_up.setVisibility(View.VISIBLE);
         } else if (activeNode.getColor().equalsIgnoreCase(enemyColor)) {
             if (intel == null && decryptCounter()) {
-                //TODO: Functionality - Report that Intel gathered
-                //TODO: factor in influence for probability
                 Random rand = new Random();
-                int odds = rand.nextInt(10);
-                if (odds > 5) {
+                int odds = rand.nextInt(100);
+                int ownership = activeNode.getOwnership();
+                if (odds > ownership - 5) {
                     intel = activeNode;
                     pop_up.setText("Intel Decrypted!  Deliver it to another WhisperSpot!");
                     pop_up.setVisibility(View.VISIBLE);
