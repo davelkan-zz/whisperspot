@@ -5,18 +5,27 @@ import android.location.LocationListener;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
 public class Listeners {
+
+    public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MapsActivity activity) {
+        return new GoogleMap.OnMapLongClickListener() {
+            public void onMapLongClick(LatLng point) {
+                if (point != null && activity.getDevMode()) {
+                    activity.updateLocation(point);
+                }
+            }
+        };
+    }
 
     public static LocationListener getLocationListener(final MapsActivity activity) {
         return new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
-                if (location != null) {
-
-                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    activity.updateLocation(latLng);
+                if (location != null && !activity.getDevMode()) {
+                    activity.updateLocation(new LatLng(location.getLatitude(), location.getLongitude()));
                 }
             }
 

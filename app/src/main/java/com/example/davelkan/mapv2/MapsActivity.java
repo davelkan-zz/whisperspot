@@ -38,22 +38,23 @@ import java.util.Set;
 public class MapsActivity extends FragmentActivity {
     private String TAG = "MapsActivity";
     public String APP_NAME = "Whisperspot";
-    public GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private BLEScanner scanner;
-    public FirebaseUtils firebaseUtils;
+    private FirebaseUtils firebaseUtils;
     private HashMap<String, List<Node>> nodes = new HashMap<>();
     private String allyColor = "blue";
     private String enemyColor = "red";
     private String userName = "Ralph";
     private int userPoints = 0; // TODO: store this in Firebase
     private int captureBonus = 10;
-    public Node activeNode;
+    private Node activeNode;
     private Node intel = null;
     private Toast oldToast = null;
     private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
     private Set<String> visitedNodes;
+    private boolean devMode = true;
 
     Button leave_intel;
     Button take_intel;
@@ -144,9 +145,11 @@ public class MapsActivity extends FragmentActivity {
         mMap.addCircle(new CircleOptions()
                 .center(node.getCenter())
                 .radius(25)
-                .strokeColor(Color.TRANSPARENT)
+//                .strokeColor(Color.TRANSPARENT)
+                .strokeColor(node.getAllyColor())
 //                .strokeColor(node.getEnemyColor())
-                .fillColor(node.getAllyColor()));
+//                .fillColor(node.getAllyColor()));
+                .fillColor(Color.TRANSPARENT));
     }
 
     // updates a node's information with new data
@@ -187,6 +190,14 @@ public class MapsActivity extends FragmentActivity {
         if (oldToast != null) oldToast.cancel();
         oldToast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
         oldToast.show();
+    }
+
+    public void setDevMode(boolean newValue) {
+        devMode = newValue;
+    }
+
+    public boolean getDevMode() {
+        return devMode;
     }
 
     /**
@@ -235,7 +246,8 @@ public class MapsActivity extends FragmentActivity {
      */
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        mMap.getUiSettings().setZoomGesturesEnabled(true);
+        mMap.getUiSettings().setAllGesturesEnabled(true);
+        mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(this));
 
         LocationListener locationListener = Listeners.getLocationListener(this);
 
