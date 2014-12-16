@@ -102,8 +102,8 @@ public class MapsActivity extends FragmentActivity {
             createNewNode("78:A5:04:8C:25:DF", "red", new LatLng(42.29372, -71.264478));
             createNewNode("D4:0E:28:2D:C5:B2", "blue", new LatLng(42.292671, -71.262174));
             createNewNode("CD:19:99:D7:B5:8E", "red", new LatLng(42.292728, -71.263475));
-            createNewNode("device2", "blue", new LatLng(42.292333, -71.262797));
-            createNewNode("device3", "red", new LatLng(42.293091, -71.2626));
+            createNewNode("device0", "blue", new LatLng(42.292333, -71.262797));
+            createNewNode("device1", "red", new LatLng(42.293091, -71.2626));
         }
     }
 

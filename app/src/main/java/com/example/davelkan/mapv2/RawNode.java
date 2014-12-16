@@ -38,10 +38,6 @@ public class RawNode {
         return owners;
     }
 
-    public LatLng getCenter() {
-        return new LatLng(lat, lon);
-    }
-
     public void setColor(String color) {
         this.color = color;
     }

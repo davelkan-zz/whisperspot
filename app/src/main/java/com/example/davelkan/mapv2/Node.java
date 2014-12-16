@@ -14,9 +14,12 @@ public class Node {
     private String color;
     private int ownership;
     private LatLng center;
-    private HashMap<String, List<Owner>> owners = new HashMap<>();
+    private HashMap<String, List<Owner>> owners;
 
     public Node() {
+        this.device = "testDevice";
+        this.color = "black";
+        this.ownership = 100;
         this.center = new LatLng(0, 0);
         this.owners = new HashMap<>();
     }
@@ -25,7 +28,7 @@ public class Node {
         this.device = device;
         this.color = rawNode.getColor();
         this.ownership = rawNode.getOwnership();
-        this.center = rawNode.getCenter();
+        this.center = new LatLng(rawNode.getLat(), rawNode.getLon());
         this.owners = rawNode.getOwners();
     }
 
@@ -112,7 +115,7 @@ public class Node {
     public void update(RawNode data) {
         setColor(data.getColor());
         setOwnership(data.getOwnership());
-        setCenter(data.getCenter());
+        setCenter(new LatLng(data.getLat(), data.getLon()));
         setOwners(data.getOwners());
     }
 
