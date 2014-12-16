@@ -416,9 +416,9 @@ public class MapsActivity extends FragmentActivity {
             leave_intel.setVisibility(View.VISIBLE);
             take_intel.setVisibility(View.VISIBLE);
         } else if (state == 2) { //In an enemy Node
+            leave_intel.setVisibility(View.VISIBLE);
             decrypt_intel.setVisibility(View.VISIBLE);
-        } else if (state == 3) { //Just left or took intel, no buttons
-        } else if (state == 4) { //Just attempted to decrypt, no buttons
+        } else if (state == 3) { //Just left intel, took intel, or attempted to decrypt
         }
     }
 
