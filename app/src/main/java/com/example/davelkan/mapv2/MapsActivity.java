@@ -85,7 +85,6 @@ public class MapsActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
-        updatePoints();
     }
 
     private void initUser() {
@@ -431,35 +430,31 @@ public class MapsActivity extends FragmentActivity {
         pop_up.setVisibility(View.INVISIBLE);
     }
 
-    private void updatePoints() {
-        System.out.print("words");
+    public void popUp(String text) {
+        pop_up.setText(text);
+        pop_up.setVisibility(View.VISIBLE);
     }
 
     private void gatherIntel() { // gathering intel at allied node... checking node color may be unnecessary
         if (activeNode == null) {
-            pop_up.setText("Return to the node to gather intel!");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("Return to the node to gather intel!");
         } else if (activeNode.getColor().equalsIgnoreCase(user.getColor())) {
             if (intel == null) {
-                pop_up.setText("Intel Gathered!  Deliver it to another WhisperSpot!");
-                pop_up.setVisibility(View.VISIBLE);
+                popUp("Intel Gathered!  Deliver it to another WhisperSpot!");
                 //TODO: Fanciness - add fancy fake number generator
                 intel = activeNode;
             } else {
-                pop_up.setText("You may only carry 1 intel at a time.");
-                pop_up.setVisibility(View.VISIBLE);
+                popUp("You may only carry 1 intel at a time.");
             }
         } else {
-            pop_up.setText("This is enemy territory! You have to decrypt intel here!");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("This is enemy territory! You have to decrypt intel here!");
         }
     }
 
     //decrypt intel at enemy node
     private void decryptIntel() {
         if (activeNode == null) {
-            pop_up.setText("Return to the node to decrypt intel!");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("Return to the node to decrypt intel!");
         } else if (activeNode.getColor().equalsIgnoreCase(user.getEnemyColor())) {
             if (intel == null && decryptCounter()) {
                 Random rand = new Random();
@@ -467,40 +462,32 @@ public class MapsActivity extends FragmentActivity {
                 int ownership = activeNode.getOwnership();
                 if (odds > ownership - 5) {
                     intel = activeNode;
-                    pop_up.setText("Intel Decrypted!  Deliver it to another WhisperSpot!");
-                    pop_up.setVisibility(View.VISIBLE);
+                    popUp("Intel Decrypted!  Deliver it to another WhisperSpot!");
                 } else {
-                    pop_up.setText("Your cover was blown while decrypting message! You need to lay low for a bit!");
-                    pop_up.setVisibility(View.VISIBLE);
+                    popUp("Your cover was blown while decrypting message! You need to lay low for a bit!");
                 }
             } else if (!decryptCounter()) {
-                pop_up.setText("Your cover is blown here! You need to lay low for a bit!");
-                pop_up.setVisibility(View.VISIBLE);
+                popUp("Your cover is blown here! You need to lay low for a bit!");
             } else if (intel != null) {
-                pop_up.setText("You may only carry 1 intel at a time.");
-                pop_up.setVisibility(View.VISIBLE);
+                popUp("You may only carry 1 intel at a time.");
             }
         } else {
-            pop_up.setText("You don't need to decrypt intel at allied WhisperSpots");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("You don't need to decrypt intel at allied WhisperSpots");
         }
     }
 
     private void returnIntel() {
         if (intel == null) {
-            pop_up.setText("You poor ignorant fool. You have no Intel to offer.");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("You poor ignorant fool. You have no Intel to offer.");
         } else if (activeNode == null) {
-            pop_up.setText("Return to the node to return intel!");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("Return to the node to return intel!");
         } else {
             int distance = (int) getDistance(intel.getCenter(), activeNode.getCenter());
 
             int influence = 5 + distance / 200;
             captureNodeByPoints(activeNode, influence);
             intel = null;
-            pop_up.setText("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
         }
     }
 
