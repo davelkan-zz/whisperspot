@@ -111,8 +111,8 @@ public class MapsActivity extends FragmentActivity {
         String userName = intent.getStringExtra(InitialSetup.USERNAME);
         String color = intent.getStringExtra(InitialSetup.TEAM);
 
-        Log.i("Username: ", userName);
-        Log.i("Team Color: ", color);
+        Log.i(TAG, "Username: " + userName);
+        Log.i(TAG, "Team Color: " +  color);
 
         user = new User(userName, color);
         firebaseUtils.retrieveUser(userName, user, preferences);

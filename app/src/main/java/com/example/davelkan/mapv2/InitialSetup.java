@@ -23,10 +23,10 @@ import com.firebase.client.Firebase;
 
 
 public class InitialSetup extends FragmentActivity {
+    private final static String TAG = "InitialSetup";
     public final static String USERNAME = "com.example.davelkan.mapv2.USERNAME";
     public final static String TEAM = "com.example.davelkan.mapv2.TEAM";
     private SharedPreferences preferences;
-    private FirebaseUtils firebaseUtils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +34,6 @@ public class InitialSetup extends FragmentActivity {
         Log.i("SETUP", "====================================");
 
         Firebase.setAndroidContext(this);
-        firebaseUtils = new FirebaseUtils();
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
 
         checkUserExists();
@@ -50,50 +49,43 @@ public class InitialSetup extends FragmentActivity {
     public void checkUserExists() {
         String userName = preferences.getString("username", null);
         String color = preferences.getString("color", null);
-        Log.i("NOOOOOOTTTTTHEEEEEEEYYYY", "bleh");
         if (userName != null && color != null) {
             Intent intent = new Intent(this, MapsActivity.class);
             intent.putExtra(USERNAME, userName);
             intent.putExtra(TEAM, color);
-            Log.i("HEEEEEEEEEEEEYYYYYY", userName);
+            Log.i(TAG, "Create user: " + userName);
             startActivity(intent);
         }
     }
 
     public void joinBowler(View view) {
-        String userName = checkUserName();
-        if (userName != "") {
-            Intent intent = new Intent(this, MapsActivity.class);
-            intent.putExtra(USERNAME, userName);
-            intent.putExtra(TEAM, "red");
-
-            preferences.edit().remove("username").apply();
-            preferences.edit().remove("color").apply();
-            preferences.edit().putString("username", userName).apply();
-            preferences.edit().putString("color", "red").apply();
-            firebaseUtils.createUser(userName, "red");
-
-            Log.i("bowler join", "bowler!!!");
-            startActivity(intent);
-        };
+        joinTeam(view, "red");
     }
 
     public void joinFedora(View view) {
+        joinTeam(view, "blue");
+    }
+
+    public void joinTeam(View view, String color) {
         String userName = checkUserName();
-        if (userName != "") {
+        if (!userName.equals("")) {
             Intent intent = new Intent(this, MapsActivity.class);
             intent.putExtra(USERNAME, userName);
-            intent.putExtra(TEAM, "blue");
+            intent.putExtra(TEAM, color);
 
             preferences.edit().remove("username").apply();
             preferences.edit().remove("color").apply();
             preferences.edit().putString("username", userName).apply();
-            preferences.edit().putString("color", "blue").apply();
-            firebaseUtils.createUser(userName, "blue");
+            preferences.edit().putString("color", color).apply();
+            (new FirebaseUtils()).createUser(userName, color);
 
-            Log.i("fedora join", "fedora!!!");
+            if (color.equals("blue")) {
+                Log.i(TAG, "fedora join");
+            } else if (color.equals("red")) {
+                Log.i(TAG, "bowler join");
+            }
             startActivity(intent);
-        };
+        }
     }
 
     public String checkUserName() {
@@ -102,7 +94,7 @@ public class InitialSetup extends FragmentActivity {
 
         nameEdit = (EditText)findViewById(R.id.username);
         userName = nameEdit.getText().toString();
-        if (userName.matches("")) {
+        if (userName.equals("")) {
             Toast.makeText(this, "You did not enter a username", Toast.LENGTH_SHORT).show();
             return "";
         }
@@ -110,29 +102,6 @@ public class InitialSetup extends FragmentActivity {
             Log.i("user", nameEdit.getText().toString());
             return userName;
         }
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_initial_setup, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -146,8 +115,7 @@ public class InitialSetup extends FragmentActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_initial_setup, container, false);
-            return rootView;
+            return inflater.inflate(R.layout.fragment_initial_setup, container, false);
         }
     }
 }
