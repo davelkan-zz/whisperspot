@@ -602,6 +602,15 @@ public class MapsActivity extends FragmentActivity {
         return true;
     }
 
+    private Node getNodeFromDevice(String device) {
+        for (List<Node> nodeList : nodes.values()) {
+            for (Node node : nodeList) {
+                if (device.equals(node.getDevice())) return node;
+            }
+        }
+        return null;
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -617,20 +626,17 @@ public class MapsActivity extends FragmentActivity {
         return true;
     }
 
-    private void hideOption(int id)
-    {
+    private void hideOption(int id) {
         MenuItem item = menu.findItem(id);
         item.setVisible(false);
     }
 
-    private void showOption(int id)
-    {
+    private void showOption(int id) {
         MenuItem item = menu.findItem(id);
         item.setVisible(true);
     }
 
-    private void setOptionTitle(int id, String title)
-    {
+    private void setOptionTitle(int id, String title) {
         MenuItem item = menu.findItem(id);
         item.setTitle(title);
     }
