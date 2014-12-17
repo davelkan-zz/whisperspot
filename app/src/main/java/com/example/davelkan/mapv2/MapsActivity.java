@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -494,5 +496,26 @@ public class MapsActivity extends FragmentActivity {
 
     private boolean decryptCounter() {  //counter to stop users trying to decrypt too frequently
         return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.my, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()){
+            case R.id.menu_change_username:
+//                showListOfNodes();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

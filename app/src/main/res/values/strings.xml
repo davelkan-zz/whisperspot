@@ -3,5 +3,6 @@
 
     <string name="app_name">mapv2</string>
     <string name="title_activity_maps">Map</string>
+    <string name="menu_show_node_info_prompt">Show Node Info</string>
 
 </resources>
