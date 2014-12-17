@@ -74,6 +74,7 @@ public class MapsActivity extends FragmentActivity {
         setupFirebase();
         initButtons();
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
+//        preferences.edit().remove("visitedNodes").apply();
         visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
         setUpMapIfNeeded();
     }
