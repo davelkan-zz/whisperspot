@@ -12,13 +12,12 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ExpandableListView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -48,23 +47,20 @@ import java.util.Set;
 public class MapsActivity extends FragmentActivity{
     private String TAG = "MapsActivity";
     public String APP_NAME = "Whisperspot";
-    public GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private BLEScanner scanner;
-    public FirebaseUtils firebaseUtils;
+    private FirebaseUtils firebaseUtils;
     private HashMap<String, List<Node>> nodes = new HashMap<>();
-    private String allyColor = "blue";
-    private String enemyColor = "red";
-    private String userName = "Ralph";
-    private int userPoints = 0; // TODO: store this in Firebase
+    private User user;
     private int captureBonus = 10;
-    public Node activeNode;
+    private Node activeNode;
     private Node intel = null;
     private Toast oldToast = null;
     private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
     private Set<String> visitedNodes;
-    //private Array knownNodes;
+    private boolean devMode = true;
 
     Button leave_intel;
     Button take_intel;
@@ -89,8 +85,13 @@ public class MapsActivity extends FragmentActivity{
         Firebase.setAndroidContext(this);
         setupFirebase();
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
+//        preferences.edit().remove("visitedNodes").apply();
         visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
+
         initButtons();
+
+        initUser();
+
         setUpMapIfNeeded();
     }
 
@@ -103,7 +104,13 @@ public class MapsActivity extends FragmentActivity{
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
-        updatePoints();
+    }
+
+    private void initUser() {
+        String userName = preferences.getString("username", "Ralph");
+        String color = preferences.getString("color", "default");
+        user = new User(userName, color);
+        firebaseUtils.retrieveUser(userName, user, preferences);
     }
 
     // create Firebase reference and pull node data from it
@@ -158,12 +165,16 @@ public class MapsActivity extends FragmentActivity{
     }
 
     public void drawNode(Node node) {
-        mMap.addCircle(new CircleOptions()
-                .center(node.getCenter())
-                .radius(25)
-                .strokeColor(Color.TRANSPARENT)
-//                .strokeColor(node.getEnemyColor())
-                .fillColor(node.getAllyColor()));
+        if (mMap != null) {
+            mMap.addCircle(new CircleOptions()
+                    .center(node.getCenter())
+                    .radius(25)
+//                  .strokeColor(Color.TRANSPARENT)
+                    .strokeColor(node.getAllyColor())
+//                  .strokeColor(node.getEnemyColor())
+//                  .fillColor(node.getAllyColor()));
+                    .fillColor(Color.TRANSPARENT));
+        }
     }
 
     // updates a node's information with new data
@@ -176,14 +187,15 @@ public class MapsActivity extends FragmentActivity{
 
     // tells node that this user is trying to capture it
     public void captureNodeByPoints(Node node, int points) {
-        CaptureResult result = node.captureByPoints(userName, allyColor, points);
-        userPoints += result.getUsedPoints();
-        toastify("you: " + userPoints + "; node: " + node.getColor() + " " + node.getOwnership());
+        CaptureResult result = node.captureByPoints(user.getName(), user.getColor(), points);
+        user.addPoints(result.getUsedPoints());
         if (result.getWasCaptured()) {
-            updateNodeColor(node, allyColor);
-            userPoints += captureBonus;
+            updateNodeColor(node, user.getColor());
+            user.addPoints(captureBonus);
         }
+        toastify("you: " + user.getPoints() + "; node: " + node.getColor() + " " + node.getOwnership());
         firebaseUtils.pushNode(node);
+        firebaseUtils.pushUser(user);
     }
 
     public void updateNodeColor(Node node, String newColor) {
@@ -201,9 +213,17 @@ public class MapsActivity extends FragmentActivity{
 
     //    Make sure toasts don't stack (cancel previous toast before creating new one)
     public void toastify(String text) {
-        if (oldToast != null) oldToast.cancel();
+//        if (oldToast != null) oldToast.cancel();
         oldToast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
         oldToast.show();
+    }
+
+    public void setDevMode(boolean newValue) {
+        devMode = newValue;
+    }
+
+    public boolean getDevMode() {
+        return devMode;
     }
 
     /**
@@ -252,7 +272,8 @@ public class MapsActivity extends FragmentActivity{
      */
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        mMap.getUiSettings().setZoomGesturesEnabled(true);
+        mMap.getUiSettings().setAllGesturesEnabled(true);
+        mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(this));
 
         LocationListener locationListener = Listeners.getLocationListener(this);
 
@@ -279,16 +300,24 @@ public class MapsActivity extends FragmentActivity{
 
         Node foundNode = checkAllyProximity(latLng);
         if (foundNode == null) foundNode = checkEnemyProximity(latLng);
+        if (activeNode != null && activeNode != foundNode) {
+            toastify("left " + activeNode.getDevice());
+            mapState = 0;
+            makeInvisible();
+        }
         if (foundNode == null) { // didn't find a node
-            if (activeNode != null) {
-                toastify("left " + activeNode.getDevice());
-                activeNode = null;
-            }
+            activeNode = null;
             Log.i("LOCATION UPDATE", "NOT IN A NODE");
             mapState = 0;
             makeInvisible();
         } else { // found a node
+            if (foundNode.getColor().equals(user.getColor())) {
+                mapState = 1;
+            } else {
+                mapState = 2;
+            }
             if (!foundNode.equals(activeNode)) {
+                zoomTo(foundNode, 19);
                 if (!visitedNodes.contains(foundNode.getDevice())) {
                     visitedNodes.add(foundNode.getDevice());
                     preferences.edit().remove("visitedNodes").apply();
@@ -296,13 +325,16 @@ public class MapsActivity extends FragmentActivity{
                     drawNode(foundNode);
                 }
                 toastify("entered " + foundNode.getDevice());
-                firebaseUtils.updateNode(this, foundNode);
+                firebaseUtils.pullNode(this, foundNode);
                 //  activity.runScanner(foundNode.getDevice());
             }
             Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
             activeNode = foundNode;
         }
+        displayButtons(mapState);
     }
+
+
 
     private void zoomTo(LatLng latLng, int zoom) {
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
@@ -322,24 +354,11 @@ public class MapsActivity extends FragmentActivity{
 
     //check to see if you're in a node
     public Node checkAllyProximity(LatLng latLng) {
-        Node activeNode = checkProximity(nodes.get(allyColor), latLng);
-        if (activeNode != null) {
-            leave_intel.setVisibility(View.VISIBLE);
-            take_intel.setVisibility(View.VISIBLE);
-            zoomTo(activeNode, 19);
-            mapState = 1;
-        }
-        return activeNode;
+        return checkProximity(nodes.get(user.getColor()), latLng);
     }
 
     public Node checkEnemyProximity(LatLng latLng) {
-        Node activeNode = checkProximity(nodes.get(enemyColor), latLng);
-        if (activeNode != null) {
-            //leave_trap.setVisibility(View.VISIBLE);
-            decrypt_intel.setVisibility(View.VISIBLE);
-            mapState = 1;
-        }
-        return activeNode;
+        return checkProximity(nodes.get(user.getEnemyColor()), latLng);
     }
 
     private Node checkProximity(List<Node> nodes, LatLng latLng) {
@@ -350,7 +369,7 @@ public class MapsActivity extends FragmentActivity{
             return null;
         }
         for (Node activeNode : nodes) {
-            if (getDistance(activeNode.getCenter(), latLng) < 25 && mapState < 2) {
+            if (getDistance(activeNode.getCenter(), latLng) < 25) {
                 System.out.print("in Range");
                 return activeNode;
             }
@@ -376,7 +395,7 @@ public class MapsActivity extends FragmentActivity{
         about = (TextView) findViewById(R.id.about);
         nodeStats = (TextView) findViewById(R.id.nodeStats);
         ownerBar = (ProgressBar) findViewById(R.id.ownerBar);
-        about.setText("Username: " + userName + "\nFaction: " + allyColor);
+        about.setText("Username: " + user.getName() + "\nFaction: " + user.getColor());
         // Create an ArrayAdapter using the string array and a default spinner layout
         //TODO: Convert visited hashmap to Array usable by array adapter
         if(visitedNodes == null) {
@@ -434,29 +453,24 @@ public class MapsActivity extends FragmentActivity{
         leave_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                take_intel.setVisibility(View.INVISIBLE);
-                leave_intel.setVisibility(View.INVISIBLE);
-                mapState = 2;
+                mapState = 3;
+                displayButtons(mapState);
                 returnIntel();
-
-                //zoomBelowNode();
             }
         });
        take_intel.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View v) {
-               take_intel.setVisibility(View.INVISIBLE);
-               leave_intel.setVisibility(View.INVISIBLE);
-               mapState = 2;
-               //display_message.setText("");
-               //display_message.setVisibility(View.VISIBLE);
-               //(new FirebaseUtils()).displayMostRecentMessage("78:A5:04:8C:25:DF", display_message);
+               mapState = 3;
+               displayButtons(mapState);
                gatherIntel();
            }
        });
         decrypt_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mapState = 4;
+                displayButtons(mapState);
                 decryptIntel();
             }
         });
@@ -470,9 +484,21 @@ public class MapsActivity extends FragmentActivity{
             @Override
             public void onClick(View v) {
                 pop_up.setVisibility(View.INVISIBLE);
-                //leave_message.setVisibility(View.VISIBLE);
             }
         });
+    }
+
+    private void displayButtons(int state) {
+        makeInvisible(); //Start from scratch, only enable buttons
+        if (state == 0) { //Not in a node, no buttons
+        } else if (state == 1) { //In an ally Node
+            leave_intel.setVisibility(View.VISIBLE);
+            take_intel.setVisibility(View.VISIBLE);
+        } else if (state == 2) { //In an enemy Node
+            leave_intel.setVisibility(View.VISIBLE);
+            decrypt_intel.setVisibility(View.VISIBLE);
+        } else if (state == 3) { //Just left intel, took intel, or attempted to decrypt
+        }
     }
 
     public void makeInvisible() {
@@ -483,81 +509,90 @@ public class MapsActivity extends FragmentActivity{
         pop_up.setVisibility(View.INVISIBLE);
     }
 
-    private void updatePoints() {
-        System.out.print("words");
+    public void popUp(String text) {
+        pop_up.setText(text);
+        pop_up.setVisibility(View.VISIBLE);
     }
 
     private void gatherIntel() { // gathering intel at allied node... checking node color may be unnecessary
         if (activeNode == null) {
-            pop_up.setText("Return to the node to gather intel!");
-            pop_up.setVisibility(View.VISIBLE);
-        } else if (activeNode.getColor().equalsIgnoreCase(allyColor)) {
+            popUp("Return to the node to gather intel!");
+        } else if (activeNode.getColor().equalsIgnoreCase(user.getColor())) {
             if (intel == null) {
-                pop_up.setText("Intel Gathered!  Deliver it to another WhisperSpot!");
-                pop_up.setVisibility(View.VISIBLE);
+                popUp("Intel Gathered!  Deliver it to another WhisperSpot!");
                 //TODO: Fanciness - add fancy fake number generator
                 intel = activeNode;
             } else {
-                pop_up.setText("You may only carry 1 intel at a time.");
-                pop_up.setVisibility(View.VISIBLE);
+                popUp("You may only carry 1 intel at a time.");
             }
         } else {
-            pop_up.setText("This is enemy territory! You have to decrypt intel here!");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("This is enemy territory! You have to decrypt intel here!");
         }
     }
 
     //decrypt intel at enemy node
     private void decryptIntel() {
         if (activeNode == null) {
-            pop_up.setText("Return to the node to decrypt intel!");
-            pop_up.setVisibility(View.VISIBLE);
-        } else if (activeNode.getColor().equalsIgnoreCase(enemyColor)) {
+            popUp("Return to the node to decrypt intel!");
+        } else if (activeNode.getColor().equalsIgnoreCase(user.getEnemyColor())) {
             if (intel == null && decryptCounter()) {
                 Random rand = new Random();
                 int odds = rand.nextInt(100);
                 int ownership = activeNode.getOwnership();
                 if (odds > ownership - 5) {
                     intel = activeNode;
-                    pop_up.setText("Intel Decrypted!  Deliver it to another WhisperSpot!");
-                    pop_up.setVisibility(View.VISIBLE);
+                    popUp("Intel Decrypted!  Deliver it to another WhisperSpot!");
                 } else {
-                    pop_up.setText("Your cover was blown while decrypting message! You need to lay low for a bit!");
-                    pop_up.setVisibility(View.VISIBLE);
+                    popUp("Your cover was blown while decrypting message! You need to lay low for a bit!");
                 }
             } else if (!decryptCounter()) {
-                pop_up.setText("Your cover is blown here! You need to lay low for a bit!");
-                pop_up.setVisibility(View.VISIBLE);
+                popUp("Your cover is blown here! You need to lay low for a bit!");
             } else if (intel != null) {
-                pop_up.setText("You may only carry 1 intel at a time.");
-                pop_up.setVisibility(View.VISIBLE);
+                popUp("You may only carry 1 intel at a time.");
             }
         } else {
-            pop_up.setText("You don't need to decrypt intel at allied WhisperSpots");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("You don't need to decrypt intel at allied WhisperSpots");
         }
     }
 
     private void returnIntel() {
         if (intel == null) {
-            pop_up.setText("You poor ignorant fool. You have no Intel to offer.");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("You poor ignorant fool. You have no Intel to offer.");
         } else if (activeNode == null) {
-            pop_up.setText("Return to the node to return intel!");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("Return to the node to return intel!");
         } else {
             int distance = (int) getDistance(intel.getCenter(), activeNode.getCenter());
 
             int influence = 5 + distance / 200;
             captureNodeByPoints(activeNode, influence);
             intel = null;
-            pop_up.setText("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
-            pop_up.setVisibility(View.VISIBLE);
+            popUp("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
         }
     }
 
 
     private boolean decryptCounter() {  //counter to stop users trying to decrypt too frequently
         return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.my, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()){
+            case R.id.menu_change_username:
+//                showListOfNodes();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

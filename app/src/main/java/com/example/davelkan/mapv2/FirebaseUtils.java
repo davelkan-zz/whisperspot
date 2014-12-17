@@ -1,5 +1,6 @@
 package com.example.davelkan.mapv2;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.TextView;
 import com.firebase.client.DataSnapshot;
@@ -48,7 +49,7 @@ public class FirebaseUtils {
     }
 
     // requests update in information of a single node
-    public void updateNode(final MapsActivity activity, final Node node) {
+    public void pullNode(final MapsActivity activity, final Node node) {
         Firebase dataRef = firebase.child("nodes").child(node.getDevice());
         dataRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -70,7 +71,32 @@ public class FirebaseUtils {
         HashMap<String, String> user = new HashMap<String, String>();
         user.put("created", timestamp());
         user.put("color", color);
+        user.put("points", "0");
         firebase.child("users").child(username).setValue(user);
+    }
+
+    public void retrieveUser(final String username, final User userToUpdate, final SharedPreferences preferences) {
+        firebase.child("users").child(username).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                try {
+                    userToUpdate.updateWith(dataSnapshot.getValue(RawUser.class));
+                    preferences.edit().putString("color", userToUpdate.getColor()).apply();
+                } catch (FirebaseException e) {
+                    Log.i("FIREBASE POPULATE", e.toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+    }
+
+    public void pushUser(User user) {
+        firebase.child("users").child(user.getName()).setValue(user.getRawUser());
     }
 
     // pulls list of node data from firebase and creates Node objects for each

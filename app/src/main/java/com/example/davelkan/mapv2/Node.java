@@ -130,7 +130,7 @@ public class Node {
         // set new ownership number and color according to capture details
         int usedPoints = points;
         boolean wasCaptured = false;
-        if (color.equalsIgnoreCase(this.color)) {
+        if (captureColor.equalsIgnoreCase(color)) {
             ownership += points;
         } else {
             ownership -= points;
