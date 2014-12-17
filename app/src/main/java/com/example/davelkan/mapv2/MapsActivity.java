@@ -13,7 +13,6 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -292,7 +291,7 @@ public class MapsActivity extends FragmentActivity {
                     drawNode(foundNode);
                 }
                 toastify("entered " + foundNode.getDevice());
-                firebaseUtils.updateNode(this, foundNode);
+                firebaseUtils.pullNode(this, foundNode);
                 //  activity.runScanner(foundNode.getDevice());
             }
             Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());

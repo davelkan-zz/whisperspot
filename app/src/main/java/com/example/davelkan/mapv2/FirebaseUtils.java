@@ -48,7 +48,7 @@ public class FirebaseUtils {
     }
 
     // requests update in information of a single node
-    public void updateNode(final MapsActivity activity, final Node node) {
+    public void pullNode(final MapsActivity activity, final Node node) {
         Firebase dataRef = firebase.child("nodes").child(node.getDevice());
         dataRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
