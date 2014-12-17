@@ -54,7 +54,6 @@ public class MapsActivity extends FragmentActivity {
     private FirebaseUtils firebaseUtils;
     private HashMap<String, List<Node>> nodes = new HashMap<>();
     private User user;
-    private int captureBonus = 10;
     private Node activeNode;
     private Node intel = null;
     private Toast oldToast = null;
@@ -83,7 +82,7 @@ public class MapsActivity extends FragmentActivity {
         setContentView(R.layout.activity_maps);
         Log.i("STARTUP", "====================================");
         Firebase.setAndroidContext(this);
-        initFirebase();
+        firebaseUtils = new FirebaseUtils(this);
         initPreferences();
         initUser();
         initButtons();
@@ -103,7 +102,6 @@ public class MapsActivity extends FragmentActivity {
 
     private void initPreferences() {
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
-//        preferences.edit().remove("visitedNodes").apply();
         visitedDevices = preferences.getStringSet("visitedNodes", new HashSet<String>());
     }
 
@@ -112,50 +110,17 @@ public class MapsActivity extends FragmentActivity {
         String userName = intent.getStringExtra(InitialSetup.USERNAME);
         String color = intent.getStringExtra(InitialSetup.TEAM);
 
-        Log.i("Username: ", userName);
-        Log.i("Team Color: ", color);
+        Log.i(TAG, "Username: " + userName);
+        Log.i(TAG, "Team Color: " +  color);
 
         user = new User(userName, color);
         firebaseUtils.retrieveUser(userName, user, preferences);
-    }
-
-    // create Firebase reference and pull node data from it
-    private void initFirebase() {
-        firebaseUtils = new FirebaseUtils();
-        resetFirebase(false);
-        firebaseUtils.populateNodes(this);
-    }
-
-    // wipes all nodestats from the Firebase
-    private void resetFirebase(boolean confirm) {
-        if (confirm) {
-            createNewNode("BC:6A:29:AE:DA:C1", "Campus Center", "blue", new LatLng(42.293307, -71.263748));
-            createNewNode("78:A5:04:8C:25:DF", "Academic Center", "red", new LatLng(42.29372, -71.264478));
-            createNewNode("D4:0E:28:2D:C5:B2", "East Hall", "blue", new LatLng(42.292671, -71.262174));
-            createNewNode("CD:19:99:D7:B5:8E", "Upper Lawn", "red", new LatLng(42.292728, -71.263475));
-            createNewNode("device0", "Lower Lawn", "blue", new LatLng(42.292333, -71.262797));
-            createNewNode("device1", "West Hall", "red", new LatLng(42.293091, -71.2626));
-        }
     }
 
     // scans for a Bluetooth device
     public void runScanner(String device) {
         scanner = new BLEScanner(this);
         scanner.scanBLE(device);
-    }
-
-    // adds a new device to Firebase, or updates current device's information
-    private void createNewNode(String device, String name, String color, LatLng center) {
-        List<Owner> thisOwnersList = new ArrayList<>();
-        thisOwnersList.add(new Owner("initialAlly", 150));
-        List<Owner> otherOwnersList = new ArrayList<>();
-        otherOwnersList.add(new Owner("initialEnemy", 50));
-
-        HashMap<String, List<Owner>> owners = new HashMap<>();
-        owners.put(color, thisOwnersList);
-        owners.put(Node.getOtherColor(color), otherOwnersList);
-
-        firebaseUtils.pushNode(new Node(device, name, color, 50, center, owners));
     }
 
     // adds a node to list of nodes and draws on map
@@ -176,10 +141,7 @@ public class MapsActivity extends FragmentActivity {
             mMap.addCircle(new CircleOptions()
                     .center(node.getCenter())
                     .radius(25)
-//                  .strokeColor(Color.TRANSPARENT)
                     .strokeColor(node.getAllyColor())
-//                  .strokeColor(node.getEnemyColor())
-//                  .fillColor(node.getAllyColor()));
                     .fillColor(Color.TRANSPARENT));
         }
     }
@@ -190,19 +152,6 @@ public class MapsActivity extends FragmentActivity {
             updateNodeColor(node, node.getColor());
         }
         node.update(data);
-    }
-
-    // tells node that this user is trying to capture it
-    public void captureNodeByPoints(Node node, int points) {
-        CaptureResult result = node.captureByPoints(user.getName(), user.getColor(), points);
-        user.addPoints(result.getUsedPoints());
-        if (result.getWasCaptured()) {
-            updateNodeColor(node, user.getColor());
-            user.addPoints(captureBonus);
-        }
-        toastify("you: " + user.getPoints() + "; " + node.getName() + ": " + node.getColor() + " " + node.getOwnership());
-        firebaseUtils.pushNode(node);
-        firebaseUtils.pushUser(user);
     }
 
     public void updateNodeColor(Node node, String newColor) {
@@ -380,18 +329,12 @@ public class MapsActivity extends FragmentActivity {
             return null;
         }
         for (Node activeNode : nodes) {
-            if (getDistance(activeNode.getCenter(), latLng) < 25) {
+            if (activeNode.getDistance(latLng) < 25) {
                 System.out.print("in Range");
                 return activeNode;
             }
         }
         return null;
-    }
-
-    private float getDistance(LatLng start, LatLng end) {
-        float[] res = new float[]{0};
-        Location.distanceBetween(start.latitude, start.longitude, end.latitude, end.longitude, res);
-        return res[0];
     }
 
     public void initButtons() {
@@ -535,10 +478,10 @@ public class MapsActivity extends FragmentActivity {
         } else if (activeNode == null) {
             popUp("Return to the node to return intel!");
         } else {
-            int distance = (int) getDistance(intel.getCenter(), activeNode.getCenter());
+            int distance = (int) intel.getDistance(activeNode.getCenter());
 
             int influence = 5 + distance / 200;
-            captureNodeByPoints(activeNode, influence);
+            activeNode.captureByPoints(user, influence, this);
             intel = null;
             popUp("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
         }
@@ -547,6 +490,15 @@ public class MapsActivity extends FragmentActivity {
 
     private boolean decryptCounter() {  //counter to stop users trying to decrypt too frequently
         return true;
+    }
+
+    private Node getNodeFromDevice(String device) {
+        for (List<Node> nodeList : nodes.values()) {
+            for (Node node : nodeList) {
+                if (device.equals(node.getDevice())) return node;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -558,26 +510,23 @@ public class MapsActivity extends FragmentActivity {
         hideOption(R.id.menu_hide_node_info);
         if (devMode) {
             hideOption(R.id.menu_set_dev_mode_on);
-        } else if (!devMode) {
+        } else {
             hideOption(R.id.menu_set_dev_mode_off);
         }
         return true;
     }
 
-    private void hideOption(int id)
-    {
+    private void hideOption(int id) {
         MenuItem item = menu.findItem(id);
         item.setVisible(false);
     }
 
-    private void showOption(int id)
-    {
+    private void showOption(int id) {
         MenuItem item = menu.findItem(id);
         item.setVisible(true);
     }
 
-    private void setOptionTitle(int id, String title)
-    {
+    private void setOptionTitle(int id, String title) {
         MenuItem item = menu.findItem(id);
         item.setTitle(title);
     }
