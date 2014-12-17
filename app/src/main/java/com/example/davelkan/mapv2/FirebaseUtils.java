@@ -8,12 +8,15 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.FirebaseException;
 import com.firebase.client.ValueEventListener;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FirebaseUtils {
@@ -25,22 +28,44 @@ public class FirebaseUtils {
         firebase = new Firebase(url);
     }
 
+    public FirebaseUtils(MapsActivity activity) {
+        firebase = new Firebase(url);
+        resetFirebase(false);
+        populateNodes(activity);
+    }
+
+    // wipes all nodestats from the Firebase
+    private void resetFirebase(boolean confirm) {
+        if (confirm) {
+            createNewNode("BC:6A:29:AE:DA:C1", "Campus Center", "blue", new LatLng(42.293307, -71.263748));
+            createNewNode("78:A5:04:8C:25:DF", "Academic Center", "red", new LatLng(42.29372, -71.264478));
+            createNewNode("D4:0E:28:2D:C5:B2", "East Hall", "blue", new LatLng(42.292671, -71.262174));
+            createNewNode("CD:19:99:D7:B5:8E", "Upper Lawn", "red", new LatLng(42.292728, -71.263475));
+            createNewNode("device0", "Lower Lawn", "blue", new LatLng(42.292333, -71.262797));
+            createNewNode("device1", "West Hall", "red", new LatLng(42.293091, -71.2626));
+        }
+    }
+
+    // adds a new device to Firebase, or updates current device's information
+    public void createNewNode(String device, String name, String color, LatLng center) {
+        List<Owner> thisOwnersList = new ArrayList<>();
+        thisOwnersList.add(new Owner("initialAlly", 150));
+        List<Owner> otherOwnersList = new ArrayList<>();
+        otherOwnersList.add(new Owner("initialEnemy", 50));
+
+        HashMap<String, List<Owner>> owners = new HashMap<>();
+        owners.put(color, thisOwnersList);
+        owners.put(Node.getOtherColor(color), otherOwnersList);
+
+        pushNode(new Node(device, name, color, 50, center, owners));
+    }
+
     public void pushUUIDInfo(String deviceAddress, Map<String, byte[]> valueMap) {
         Firebase currentDevice = new Firebase(url).child("devices")
                                                   .child(deviceAddress)
                                                   .child(timestamp());
         currentDevice.child("values").setValue(valueMap);
         currentDevice.child("UUIDs").setValue(valueMap.keySet());
-    }
-
-    public void sendMessage(String messageText, String username, String deviceID) {
-        Firebase deviceMessages = (new Firebase(url)).child("messages")
-                                                     .child(deviceID);
-        HashMap<String, String> message = new HashMap<String, String>();
-        message.put("username", username);
-        message.put("text", messageText);
-        message.put("timestamp", timestamp());
-        deviceMessages.push().setValue(message);
     }
 
     // pushes node data to Firebase list of node data
@@ -117,25 +142,6 @@ public class FirebaseUtils {
 
             @Override
             public void onCancelled(FirebaseError error) {
-            }
-        });
-    }
-
-    public void displayMostRecentMessage(String deviceID, final TextView text) {
-        Firebase deviceMessages = (new Firebase(url)).child("messages").child(deviceID);
-        deviceMessages.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                HashMap<String, HashMap<String, String>> messages;
-                messages = (HashMap<String, HashMap<String, String>>) dataSnapshot.getValue();
-                String maxKey = Collections.max(messages.keySet());
-                //TODO: Display username and timestamp
-                text.setText(messages.get(maxKey).get("text"));
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
             }
         });
     }

@@ -1,6 +1,7 @@
 package com.example.davelkan.mapv2;
 
 import android.graphics.Color;
+import android.location.Location;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Node {
+    private static final int CAPTURE_BONUS = 10;
     private String device;
     private String name;
     private String color;
@@ -130,8 +132,41 @@ public class Node {
         setOwners(data.getOwners());
     }
 
+    public void stealPointsFromPreviousOwners(User user, int usedPoints) {
+        // subtract used capture points from other team's list of owners
+        List<Owner> otherOwners = owners.get(user.getEnemyColor());
+        int pointsToRemove = usedPoints;
+        while (pointsToRemove > 0) {
+            // start removing from beginning of list (oldest owners)
+            if (otherOwners.size() == 0) {
+                Log.i("CAPTURE EVENT", "No one to take points from :(");
+                break;
+            }
+            Owner otherOwner = otherOwners.get(0);
+            // remove owner if all their points are removed, otherwise decrease their points
+            Log.i("CAPTURE EVENT", user.getName() + " took " + usedPoints + " points from " + otherOwner.getUserName());
+            if (pointsToRemove >= otherOwner.getPoints()) {
+                otherOwners.remove(0);
+                pointsToRemove -= otherOwner.getPoints();
+                Log.i("CAPTURE EVENT", otherOwner.getUserName() + " lost all points at " + name);
+            } else {
+                otherOwner.subtractPoints(pointsToRemove);
+                pointsToRemove = 0;
+            }
+        }
+    }
+
+    public float getDistance(LatLng other) {
+        float[] res = new float[]{0};
+        Location.distanceBetween(getCenter().latitude, getCenter().longitude, other.latitude, other.longitude, res);
+        return res[0];
+    }
+
     // add points to this node by color of capturing team
-    public CaptureResult captureByPoints(String userName, String captureColor, int points) {
+    public void captureByPoints(User user, int points, MapsActivity activity) {
+        String captureColor = user.getColor();
+        String userName = user.getName();
+
         // add capturing team's color to list of owners
         Log.i("CAPTURE EVENT", userName + " captures " + device + " with " + points + " points.");
         if (owners.get(captureColor) == null) {
@@ -140,7 +175,6 @@ public class Node {
 
         // set new ownership number and color according to capture details
         int usedPoints = points;
-        boolean wasCaptured = false;
         if (captureColor.equalsIgnoreCase(color)) {
             ownership += points;
         } else {
@@ -149,7 +183,8 @@ public class Node {
             if (ownership < 0) {
                 ownership *= -1;
                 setColor(captureColor);
-                wasCaptured = true;
+                activity.updateNodeColor(this, user.getColor());
+                user.addPoints(CAPTURE_BONUS);
             }
         }
 
@@ -162,33 +197,17 @@ public class Node {
 
         Log.i("CAPTURE EVENT", userName + " uses " + usedPoints + " points at " + name);
 
-        // subtract used capture points from other team's list of owners
-        List<Owner> otherOwners = owners.get(getOtherColor(captureColor));
-        int pointsToRemove = usedPoints;
-        while (pointsToRemove > 0) {
-            // start removing from beginning of list (oldest owners)
-            if (otherOwners.size() == 0) {
-                Log.i("CAPTURE EVENT", "No one to take points from :(");
-                break;
-            }
-            Owner otherOwner = otherOwners.get(0);
-            // remove owner if all their points are removed, otherwise decrease their points
-            Log.i("CAPTURE EVENT", userName + " took " + usedPoints + " points from " + otherOwner.getUserName());
-            if (pointsToRemove >= otherOwner.getPoints()) {
-                otherOwners.remove(0);
-                pointsToRemove -= otherOwner.getPoints();
-                Log.i("CAPTURE EVENT", otherOwner.getUserName() + " lost all points at " + name);
-            } else {
-                otherOwner.subtractPoints(pointsToRemove);
-                pointsToRemove = 0;
-            }
-        }
+        stealPointsFromPreviousOwners(user, usedPoints);
 
         // add used capture points to the end of this team's list of owners
         if (usedPoints > 0) {
             owners.get(color).add(new Owner(userName, usedPoints));
         }
 
-        return new CaptureResult(usedPoints, wasCaptured);
+        user.addPoints(usedPoints);
+
+        activity.toastify("you: " + user.getPoints() + "; " + getName() + ": " + getColor() + " " + getOwnership());
+        activity.getFirebaseUtils().pushNode(this);
+        activity.getFirebaseUtils().pushUser(user);
     }
 }
