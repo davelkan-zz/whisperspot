@@ -11,8 +11,14 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class MapsActivity extends FragmentActivity {
+public class MapsActivity extends FragmentActivity{
     private String TAG = "MapsActivity";
     public String APP_NAME = "Whisperspot";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -50,13 +56,19 @@ public class MapsActivity extends FragmentActivity {
     private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
     private Set<String> visitedNodes;
-    private boolean devMode = true;
+    private boolean devMode = false;
 
     Button leave_intel;
     Button take_intel;
     Button leave_trap;
     Button decrypt_intel;
+    Button menu;
+    Button closeMenu;
     TextView pop_up;
+    TextView about;
+    Spinner node_selector;
+    TextView nodeStats;
+    ProgressBar ownerBar;
     int mapState = 0;
     public Marker myLocation;
     int zoom = 17;
@@ -67,13 +79,11 @@ public class MapsActivity extends FragmentActivity {
         setContentView(R.layout.activity_maps);
         Log.i("STARTUP", "====================================");
         Firebase.setAndroidContext(this);
-        setupFirebase();
-        initButtons();
-        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
-//        preferences.edit().remove("visitedNodes").apply();
-        visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
+        initFirebase();
+        initPreferences();
         initUser();
-        setUpMapIfNeeded();
+        initButtons();
+        initMap();
     }
 
     @Override
@@ -84,7 +94,13 @@ public class MapsActivity extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setUpMapIfNeeded();
+        initMap();
+    }
+
+    private void initPreferences() {
+        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
+//        preferences.edit().remove("visitedNodes").apply();
+        visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
     }
 
     private void initUser() {
@@ -100,7 +116,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     // create Firebase reference and pull node data from it
-    private void setupFirebase() {
+    private void initFirebase() {
         firebaseUtils = new FirebaseUtils();
         resetFirebase(false);
         firebaseUtils.populateNodes(this);
@@ -205,6 +221,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void setDevMode(boolean newValue) {
+        toastify("Dev mode set to " + (newValue?"ON":"OFF") + " from " + (devMode?"ON":"OFF"));
         devMode = newValue;
     }
 
@@ -228,7 +245,7 @@ public class MapsActivity extends FragmentActivity {
      * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
      * method in {@link #onResume()} to guarantee that it will be called.
      */
-    private void setUpMapIfNeeded() {
+    private void initMap() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if (!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
@@ -375,7 +392,67 @@ public class MapsActivity extends FragmentActivity {
         leave_trap = (Button) findViewById(R.id.lvtrp);
         decrypt_intel = (Button) findViewById(R.id.dcptmsg);
         pop_up = (TextView) findViewById(R.id.popUp);
+        node_selector = (Spinner) findViewById(R.id.node_selector);
+        menu = (Button) findViewById(R.id.menu);
+        closeMenu = (Button) findViewById(R.id.closeMenu);
+        about = (TextView) findViewById(R.id.about);
+        nodeStats = (TextView) findViewById(R.id.nodeStats);
+        ownerBar = (ProgressBar) findViewById(R.id.ownerBar);
+        about.setText("Username: " + user.getName() + "\nFaction: " + user.getColor());
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        //TODO: Convert visited hashmap to Array usable by array adapter
+        if(visitedNodes == null) {
+            Log.i("pipe", "FUCK FUCK FUCK FUCK");
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedNodes));
+        // Apply the adapter to the spinner
+        node_selector.setAdapter(adapter);
+        node_selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedFromList = node_selector.getItemAtPosition(position).toString();
+                nodeStats.setText(selectedFromList);
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+                /*new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectedFromList = node_selector.getItemAtPosition(position).toString();
+                nodeStats.setText(selectedFromList);
+                //TODO: identify node selected
+                //TODO: modify nodeStats Textview based on identified node
+                //TODO: show nodeStats TextView and zoom on selected node
+            }
+        });*/
+        closeMenu.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                menu.setVisibility(View.VISIBLE);
+                about.setVisibility(View.INVISIBLE);
+                node_selector.setVisibility(View.INVISIBLE);
+                nodeStats.setVisibility(View.INVISIBLE);
+                closeMenu.setVisibility(View.INVISIBLE);
+                ownerBar.setVisibility(View.INVISIBLE);
+
+            }
+        });
+        menu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                closeMenu.setVisibility(View.VISIBLE);
+                about.setVisibility(View.VISIBLE);
+                node_selector.setVisibility(View.VISIBLE);
+                nodeStats.setVisibility(View.VISIBLE);
+                menu.setVisibility(View.INVISIBLE);
+                ownerBar.setVisibility(View.VISIBLE);
+            }
+        });
         leave_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -499,5 +576,29 @@ public class MapsActivity extends FragmentActivity {
 
     private boolean decryptCounter() {  //counter to stop users trying to decrypt too frequently
         return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.my, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()){
+            case R.id.menu_show_node_info:
+//                showListOfNodes();
+                return true;
+            case R.id.menu_set_dev_mode:
+                Listeners.setDevModeListener(this);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

@@ -14,4 +14,6 @@
     <string name="team_input">What is your quest?</string>
     <string name="join_bowler">Join the classy bowler hat spy society?</string>
     <string name="join_fedora">Join the trendy fedora hat spy coalition?</string>
+    <string name="menu_show_node_info_prompt">Show Node Info</string>
+    <string name="menu_set_dev_mode">Set Dev Mode</string>
 </resources>
