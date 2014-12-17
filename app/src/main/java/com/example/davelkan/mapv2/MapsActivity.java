@@ -124,12 +124,12 @@ public class MapsActivity extends FragmentActivity {
     // wipes all nodestats from the Firebase
     private void resetFirebase(boolean confirm) {
         if (confirm) {
-            createNewNode("BC:6A:29:AE:DA:C1", "blue", new LatLng(42.293307, -71.263748));
-            createNewNode("78:A5:04:8C:25:DF", "red", new LatLng(42.29372, -71.264478));
-            createNewNode("D4:0E:28:2D:C5:B2", "blue", new LatLng(42.292671, -71.262174));
-            createNewNode("CD:19:99:D7:B5:8E", "red", new LatLng(42.292728, -71.263475));
-            createNewNode("device0", "blue", new LatLng(42.292333, -71.262797));
-            createNewNode("device1", "red", new LatLng(42.293091, -71.2626));
+            createNewNode("BC:6A:29:AE:DA:C1", "Campus Center", "blue", new LatLng(42.293307, -71.263748));
+            createNewNode("78:A5:04:8C:25:DF", "Academic Center", "red", new LatLng(42.29372, -71.264478));
+            createNewNode("D4:0E:28:2D:C5:B2", "East Hall", "blue", new LatLng(42.292671, -71.262174));
+            createNewNode("CD:19:99:D7:B5:8E", "Upper Lawn", "red", new LatLng(42.292728, -71.263475));
+            createNewNode("device0", "Lower Lawn", "blue", new LatLng(42.292333, -71.262797));
+            createNewNode("device1", "West Hall", "red", new LatLng(42.293091, -71.2626));
         }
     }
 
@@ -140,7 +140,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     // adds a new device to Firebase, or updates current device's information
-    private void createNewNode(String device, String color, LatLng center) {
+    private void createNewNode(String device, String name, String color, LatLng center) {
         List<Owner> thisOwnersList = new ArrayList<>();
         thisOwnersList.add(new Owner("initialAlly", 150));
         List<Owner> otherOwnersList = new ArrayList<>();
@@ -150,7 +150,7 @@ public class MapsActivity extends FragmentActivity {
         owners.put(color, thisOwnersList);
         owners.put(Node.getOtherColor(color), otherOwnersList);
 
-        firebaseUtils.pushNode(new Node(device, color, 50, center, owners));
+        firebaseUtils.pushNode(new Node(device, name, color, 50, center, owners));
     }
 
     // adds a node to list of nodes and draws on map
@@ -194,7 +194,7 @@ public class MapsActivity extends FragmentActivity {
             updateNodeColor(node, user.getColor());
             user.addPoints(captureBonus);
         }
-        toastify("you: " + user.getPoints() + "; node: " + node.getColor() + " " + node.getOwnership());
+        toastify("you: " + user.getPoints() + "; " + node.getName() + ": " + node.getColor() + " " + node.getOwnership());
         firebaseUtils.pushNode(node);
         firebaseUtils.pushUser(user);
     }
@@ -303,7 +303,7 @@ public class MapsActivity extends FragmentActivity {
         Node foundNode = checkAllyProximity(latLng);
         if (foundNode == null) foundNode = checkEnemyProximity(latLng);
         if (activeNode != null && activeNode != foundNode) {
-            toastify("left " + activeNode.getDevice());
+            toastify("left " + activeNode.getName());
             mapState = 0;
             makeInvisible();
         }
@@ -326,7 +326,7 @@ public class MapsActivity extends FragmentActivity {
                     preferences.edit().putStringSet("visitedNodes", visitedNodes).apply();
                     drawNode(foundNode);
                 }
-                toastify("entered " + foundNode.getDevice());
+                toastify("entered " + foundNode.getName());
                 firebaseUtils.pullNode(this, foundNode);
                 //  activity.runScanner(foundNode.getDevice());
             }

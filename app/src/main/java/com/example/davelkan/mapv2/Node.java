@@ -11,6 +11,7 @@ import java.util.List;
 
 public class Node {
     private String device;
+    private String name;
     private String color;
     private int ownership;
     private LatLng center;
@@ -18,6 +19,7 @@ public class Node {
 
     public Node() {
         this.device = "testDevice";
+        this.name = "testName";
         this.color = "black";
         this.ownership = 100;
         this.center = new LatLng(0, 0);
@@ -26,14 +28,16 @@ public class Node {
 
     public Node(RawNode rawNode, String device) {
         this.device = device;
+        this.name = rawNode.getName();
         this.color = rawNode.getColor();
         this.ownership = rawNode.getOwnership();
         this.center = new LatLng(rawNode.getLat(), rawNode.getLon());
         this.owners = rawNode.getOwners();
     }
 
-    public Node(String device, String color, int ownership, LatLng center, HashMap<String, List<Owner>> owners) {
+    public Node(String device, String name, String color, int ownership, LatLng center, HashMap<String, List<Owner>> owners) {
         this.device = device;
+        this.name = name;
         this.color = color;
         this.ownership = ownership;
         this.center = center;
@@ -41,11 +45,14 @@ public class Node {
     }
 
     public RawNode getRawNode() {
-        return new RawNode(color, ownership, center.latitude, center.longitude, owners);
+        return new RawNode(name, color, ownership, center.latitude, center.longitude, owners);
     }
 
     public void setDevice(String device) {
         this.device = device;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
     public void setColor(String color) {
         this.color = color;
@@ -68,6 +75,9 @@ public class Node {
 
     public String getDevice() {
         return device;
+    }
+    public String getName() {
+        return name;
     }
     public int getOwnership() {
         return ownership;
@@ -113,6 +123,7 @@ public class Node {
 
     // update this node's information with new data
     public void update(RawNode data) {
+        setName(data.getName());
         setColor(data.getColor());
         setOwnership(data.getOwnership());
         setCenter(new LatLng(data.getLat(), data.getLon()));
@@ -149,7 +160,7 @@ public class Node {
             ownership = 100;
         }
 
-        Log.i("CAPTURE EVENT", userName + " uses " + usedPoints + " points at " + device);
+        Log.i("CAPTURE EVENT", userName + " uses " + usedPoints + " points at " + name);
 
         // subtract used capture points from other team's list of owners
         List<Owner> otherOwners = owners.get(getOtherColor(captureColor));
@@ -166,7 +177,7 @@ public class Node {
             if (pointsToRemove >= otherOwner.getPoints()) {
                 otherOwners.remove(0);
                 pointsToRemove -= otherOwner.getPoints();
-                Log.i("CAPTURE EVENT", otherOwner.getUserName() + " lost all points at " + device);
+                Log.i("CAPTURE EVENT", otherOwner.getUserName() + " lost all points at " + name);
             } else {
                 otherOwner.subtractPoints(pointsToRemove);
                 pointsToRemove = 0;
