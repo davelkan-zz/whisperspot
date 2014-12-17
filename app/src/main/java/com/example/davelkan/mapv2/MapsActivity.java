@@ -60,7 +60,7 @@ public class MapsActivity extends FragmentActivity{
     private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
     private Set<String> visitedNodes;
-    private boolean devMode = true;
+    private boolean devMode = false;
 
     Button leave_intel;
     Button take_intel;
@@ -219,6 +219,7 @@ public class MapsActivity extends FragmentActivity{
     }
 
     public void setDevMode(boolean newValue) {
+        toastify("Dev mode set to " + (newValue?"ON":"OFF") + " from " + (devMode?"ON":"OFF"));
         devMode = newValue;
     }
 
@@ -588,8 +589,11 @@ public class MapsActivity extends FragmentActivity{
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()){
-            case R.id.menu_change_username:
+            case R.id.menu_show_node_info:
 //                showListOfNodes();
+                return true;
+            case R.id.menu_set_dev_mode:
+                Listeners.setDevModeListener(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
