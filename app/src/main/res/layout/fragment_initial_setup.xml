@@ -1,0 +1,144 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    tools:context="com.example.davelkan.mapv2.InitialSetup$PlaceholderFragment">
+
+    <TextView
+        style="@style/DefFont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/welcome_agent"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        />
+
+    <TextView
+        style="@style/DefFont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/name_input"
+        android:padding="20dp"
+        />
+
+    <EditText
+        style="@style/DefFont"
+        android:id="@+id/username"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/choose_name"
+        android:inputType="text"
+        android:padding="20dp"/>
+
+    <TextView
+        style="@style/DefFont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/team_input"
+        android:paddingTop="40dp"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/DefFont"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/join_bowler"
+            android:paddingLeft="40dp"
+            android:paddingTop="20dp"
+            android:textColor="@color/red"
+            android:paddingBottom="20dp"
+            />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/join_bowler"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="@string/red_team"
+                android:background="@color/red"
+                android:layout_centerInParent="true"
+                android:onClick="joinBowler"/>
+        </RelativeLayout>
+
+        <TextView
+            style="@style/DefFont"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/join_fedora"
+            android:paddingLeft="40dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:textColor="@color/blue"
+            />
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/join_fedora"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="@string/blue_team"
+                android:background="@color/blue"
+                android:layout_centerInParent="true"
+                android:onClick="joinFedora"/>
+
+        </RelativeLayout>
+        </LinearLayout>
+    
+    <!--<TextView-->
+        <!--style="@style/DefFont"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="@string/join_bowler"-->
+        <!--android:paddingLeft="40dp"-->
+        <!--android:paddingTop="20dp"-->
+        <!--android:textColor="@color/red"-->
+        <!--android:paddingBottom="20dp"-->
+        <!--/>-->
+
+    <!--<RelativeLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content">-->
+        <!--<Button-->
+            <!--android:layout_width="100dp"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="@string/red_team"-->
+            <!--android:background="@color/red"-->
+            <!--android:layout_centerInParent="true"/>-->
+        <!--</RelativeLayout>-->
+
+    <!--<TextView-->
+        <!--style="@style/DefFont"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="@string/join_fedora"-->
+        <!--android:paddingLeft="40dp"-->
+        <!--android:paddingTop="20dp"-->
+        <!--android:paddingBottom="20dp"-->
+        <!--android:textColor="@color/blue"-->
+        <!--/>-->
+
+    <!--<RelativeLayout-->
+        <!--android:layout_width="fill_parent"-->
+        <!--android:layout_height="wrap_content">-->
+        <!--<Button-->
+            <!--android:layout_width="100dp"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="@string/blue_team"-->
+            <!--android:background="@color/blue"-->
+            <!--android:layout_centerInParent="true"/>-->
+
+    <!--</RelativeLayout>-->
+
+</LinearLayout>

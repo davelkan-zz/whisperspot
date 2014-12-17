@@ -88,8 +88,13 @@ public class MapsActivity extends FragmentActivity {
     }
 
     private void initUser() {
-        String userName = preferences.getString("username", "Ralph");
-        String color = preferences.getString("color", "default");
+        Intent intent = getIntent();
+        String userName = intent.getStringExtra(InitialSetup.USERNAME);
+        String color = intent.getStringExtra(InitialSetup.TEAM);
+
+        Log.i("Username: ", userName);
+        Log.i("Team Color: ", color);
+
         user = new User(userName, color);
         firebaseUtils.retrieveUser(userName, user, preferences);
     }
