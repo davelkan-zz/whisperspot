@@ -68,23 +68,25 @@
         android:text="Medium Text"
         android:id="@+id/nodeStats"
         android:visibility="invisible"
+        android:background="@color/material_blue_grey_800"
         android:layout_gravity="left|bottom" />
-
-    <Spinner
-        android:layout_width="117dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/node_selector"
-        android:layout_gravity="right|top"
-        android:layout_marginTop="25dp"
-        android:visibility="invisible"/>
 
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="81dp"
+        android:layout_height="45dp"
         android:id="@+id/ownerBar"
-        android:layout_gravity="right|bottom"
+        android:layout_gravity="center_horizontal|bottom"
         android:visibility="invisible"
         android:layout_marginBottom="10dp" />
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:id="@+id/node_selector"
+        android:layout_gravity="center"
+        android:textAlignment="center"
+        android:visibility="invisible"
+        android:layout_marginTop="70dp" />
 
 </FrameLayout>

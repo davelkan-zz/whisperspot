@@ -62,6 +62,7 @@ public class MapsActivity extends FragmentActivity {
     private SharedPreferences preferences;
     private Set<String> visitedDevices;
     private boolean devMode = false;
+    //private boolean dontZoom = true;
 
     Button leave_intel;
     Button take_intel;
@@ -410,60 +411,6 @@ public class MapsActivity extends FragmentActivity {
         if(visitedDevices == null) {
             Log.i("pipe", "FUCK FUCK FUCK FUCK");
         }
-        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedDevices));
-        // Apply the adapter to the spinner
-        node_selector.setAdapter(adapter);
-        node_selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedFromList = node_selector.getItemAtPosition(position).toString();
-                Log.i("what i want",selectedFromList);
-                LatLng elementCenter = null;
-                if(nodes.get("red") != null) {
-                    for (Node element : nodes.get("red")) {
-                        if (selectedFromList.equals(element.getDevice())) {
-                            elementCenter = element.getCenter();
-                            zoomBelow(elementCenter);
-                            nodeStats.setText("WhisperSpot Location: " + elementCenter.toString() + "\n" + "Controlling Faction: Red Bowlers");
-                            int percentage = (element.getOwnership());
-                            ownerBar.setProgress(percentage);
-                            //ownerBar.setProgressBackgroundTintList();
-                            ownerBar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
-                            if(Build.VERSION.SDK_INT >= 21) {
-                                ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.BLUE));
-                            }
-
-
-                            //ownerBar.
-                        }
-                    }
-                }
-                if(elementCenter == null && nodes.get("blue") != null){
-                    for (Node element2 : nodes.get("blue")) {
-                        if (selectedFromList.equals(element2.getDevice())) {
-                            LatLng element2Center = element2.getCenter();
-                            zoomBelow(element2Center);
-                            nodeStats.setText("WhisperSpot Location: " + element2Center.toString() + "\n"  + "Controlling Faction: Blue Fedoras");
-                            int percentage = (element2.getOwnership());
-                            ownerBar.setProgress(percentage);
-                            ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
-                            if(Build.VERSION.SDK_INT >= 21) {
-                                ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.RED));
-                            }
-
-                        }
-                    }
-                        //selectedFromList = nodes.get("red")node_selector.getItemAtPosition(position);
-                }
-
-            }
-                //nodeStats.setText(selectedFromList);
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
         //TODO: identify node selected
         //TODO: modify nodeStats Textview based on identified node
         //TODO: show nodeStats TextView and zoom on selected node
@@ -649,6 +596,7 @@ public class MapsActivity extends FragmentActivity {
                 node_selector.setVisibility(View.VISIBLE);
                 nodeStats.setVisibility(View.VISIBLE);
                 ownerBar.setVisibility(View.VISIBLE);
+                initNodeStates();
                 return true;
             case R.id.menu_hide_node_info:
                 showOption(R.id.menu_show_node_info);
@@ -671,5 +619,54 @@ public class MapsActivity extends FragmentActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void initNodeStates(){
+        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedDevices));
+        // Apply the adapter to the spinner
+        node_selector.setAdapter(adapter);
+        node_selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedFromList = node_selector.getItemAtPosition(position).toString();
+                Log.i("what i want",selectedFromList);
+                if(!showNodeStats(selectedFromList,"red")) {
+                    showNodeStats(selectedFromList, "blue");
+                }
+            }
+            //nodeStats.setText(selectedFromList);
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+    }
+    private Boolean showNodeStats(String selectedFromList, String faction){
+        for (Node element : nodes.get(faction)) {
+            if (selectedFromList.equals(element.getDevice())) {
+                LatLng elementCenter = element.getCenter();
+                zoomBelow(elementCenter);
+                if (faction == "blue") {
+                    faction = "Blue Fedoras";
+                    ownerBar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
+                    if (Build.VERSION.SDK_INT >= 21) {
+                        ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.BLUE));
+                    }
+
+                } else if (faction == "red") {
+                    faction = "Red Bowlers";
+                    ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
+                    if (Build.VERSION.SDK_INT >= 21) {
+                        ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.RED));
+                    }
+                }
+                nodeStats.setText("\n \n \n" + elementCenter.toString() + "\n" + "Controlling Faction: " + faction + " \n \n Controlling Influence: ");
+                int percentage = (element.getOwnership());
+                ownerBar.setProgress(percentage);
+                return true;
+            }
+        }
+        return false;
     }
 }
