@@ -187,7 +187,7 @@ public class MapsActivity extends FragmentActivity {
 
     //    Make sure toasts don't stack (cancel previous toast before creating new one)
     public void toastify(String text) {
-        if (oldToast != null) oldToast.cancel();
+//        if (oldToast != null) oldToast.cancel();
         oldToast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
         oldToast.show();
     }
@@ -274,11 +274,11 @@ public class MapsActivity extends FragmentActivity {
 
         Node foundNode = checkAllyProximity(latLng);
         if (foundNode == null) foundNode = checkEnemyProximity(latLng);
+        if (activeNode != null && activeNode != foundNode) {
+            toastify("left " + activeNode.getDevice());
+        }
         if (foundNode == null) { // didn't find a node
-            if (activeNode != null) {
-                toastify("left " + activeNode.getDevice());
-                activeNode = null;
-            }
+            activeNode = null;
             Log.i("LOCATION UPDATE", "NOT IN A NODE");
             mapState = 0;
             makeInvisible();
