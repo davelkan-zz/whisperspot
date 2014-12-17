@@ -9,7 +9,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -23,10 +22,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.reflect.Array;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Random;
 
 import com.firebase.client.Firebase;
@@ -83,16 +79,11 @@ public class MapsActivity extends FragmentActivity{
         setContentView(R.layout.activity_maps);
         Log.i("STARTUP", "====================================");
         Firebase.setAndroidContext(this);
-        setupFirebase();
-        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
-//        preferences.edit().remove("visitedNodes").apply();
-        visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
-
-        initButtons();
-
+        initFirebase();
+        initPreferences();
         initUser();
-
-        setUpMapIfNeeded();
+        initButtons();
+        initMap();
     }
 
     @Override
@@ -103,7 +94,13 @@ public class MapsActivity extends FragmentActivity{
     @Override
     protected void onResume() {
         super.onResume();
-        setUpMapIfNeeded();
+        initMap();
+    }
+
+    private void initPreferences() {
+        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
+//        preferences.edit().remove("visitedNodes").apply();
+        visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
     }
 
     private void initUser() {
@@ -114,7 +111,7 @@ public class MapsActivity extends FragmentActivity{
     }
 
     // create Firebase reference and pull node data from it
-    private void setupFirebase() {
+    private void initFirebase() {
         firebaseUtils = new FirebaseUtils();
         resetFirebase(false);
         firebaseUtils.populateNodes(this);
@@ -243,7 +240,7 @@ public class MapsActivity extends FragmentActivity{
      * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
      * method in {@link #onResume()} to guarantee that it will be called.
      */
-    private void setUpMapIfNeeded() {
+    private void initMap() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if (!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
