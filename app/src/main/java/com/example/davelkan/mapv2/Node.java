@@ -205,9 +205,5 @@ public class Node {
         }
 
         user.addPoints(usedPoints);
-
-        activity.toastify("you: " + user.getPoints() + "; " + getName() + ": " + getColor() + " " + getOwnership());
-        activity.getFirebaseUtils().pushNode(this);
-        activity.getFirebaseUtils().pushUser(user);
     }
 }

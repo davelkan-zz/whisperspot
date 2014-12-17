@@ -55,7 +55,7 @@ public class MapsActivity extends FragmentActivity {
     private HashMap<String, List<Node>> nodes = new HashMap<>();
     private User user;
     private Node activeNode;
-    private Node intel = null;
+    private Intel intel = new Intel();
     private Toast oldToast = null;
     private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
@@ -380,7 +380,7 @@ public class MapsActivity extends FragmentActivity {
            public void onClick(View v) {
                mapState = 3;
                displayButtons(mapState);
-               gatherIntel();
+               popUp(intel.gatherIntel(activeNode, user));
            }
        });
         decrypt_intel.setOnClickListener(new View.OnClickListener() {
@@ -388,7 +388,7 @@ public class MapsActivity extends FragmentActivity {
             public void onClick(View v) {
                 mapState = 4;
                 displayButtons(mapState);
-                decryptIntel();
+                popUp(intel.decryptIntel(activeNode, user));
             }
         });
         leave_trap.setOnClickListener(new View.OnClickListener() {
@@ -403,6 +403,13 @@ public class MapsActivity extends FragmentActivity {
                 pop_up.setVisibility(View.INVISIBLE);
             }
         });
+    }
+
+    private void returnIntel() {
+        popUp(intel.returnIntel(activeNode, user, this));
+        getFirebaseUtils().pushNode(activeNode);
+        getFirebaseUtils().pushUser(user);
+        toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " + activeNode.getColor() + " " + activeNode.getOwnership());
     }
 
     private void displayButtons(int state) {
@@ -429,67 +436,6 @@ public class MapsActivity extends FragmentActivity {
     public void popUp(String text) {
         pop_up.setText(text);
         pop_up.setVisibility(View.VISIBLE);
-    }
-
-    private void gatherIntel() { // gathering intel at allied node... checking node color may be unnecessary
-        if (activeNode == null) {
-            popUp("Return to the node to gather intel!");
-        } else if (activeNode.getColor().equalsIgnoreCase(user.getColor())) {
-            if (intel == null) {
-                popUp("Intel Gathered!  Deliver it to another WhisperSpot!");
-                //TODO: Fanciness - add fancy fake number generator
-                intel = activeNode;
-            } else {
-                popUp("You may only carry 1 intel at a time.");
-            }
-        } else {
-            popUp("This is enemy territory! You have to decrypt intel here!");
-        }
-    }
-
-    //decrypt intel at enemy node
-    private void decryptIntel() {
-        if (activeNode == null) {
-            popUp("Return to the node to decrypt intel!");
-        } else if (activeNode.getColor().equalsIgnoreCase(user.getEnemyColor())) {
-            if (intel == null && decryptCounter()) {
-                Random rand = new Random();
-                int odds = rand.nextInt(100);
-                int ownership = activeNode.getOwnership();
-                if (odds > ownership - 5) {
-                    intel = activeNode;
-                    popUp("Intel Decrypted!  Deliver it to another WhisperSpot!");
-                } else {
-                    popUp("Your cover was blown while decrypting message! You need to lay low for a bit!");
-                }
-            } else if (!decryptCounter()) {
-                popUp("Your cover is blown here! You need to lay low for a bit!");
-            } else if (intel != null) {
-                popUp("You may only carry 1 intel at a time.");
-            }
-        } else {
-            popUp("You don't need to decrypt intel at allied WhisperSpots");
-        }
-    }
-
-    private void returnIntel() {
-        if (intel == null) {
-            popUp("You poor ignorant fool. You have no Intel to offer.");
-        } else if (activeNode == null) {
-            popUp("Return to the node to return intel!");
-        } else {
-            int distance = (int) intel.getDistance(activeNode.getCenter());
-
-            int influence = 5 + distance / 200;
-            activeNode.captureByPoints(user, influence, this);
-            intel = null;
-            popUp("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
-        }
-    }
-
-
-    private boolean decryptCounter() {  //counter to stop users trying to decrypt too frequently
-        return true;
     }
 
     private Node getNodeFromDevice(String device) {
