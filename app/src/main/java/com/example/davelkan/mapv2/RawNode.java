@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class RawNode {
+    private String name;
     private String color;
     private int ownership;
     private double lat;
@@ -14,7 +15,8 @@ public class RawNode {
 
     public RawNode() {}
 
-    public RawNode(String color, int ownership, double lat, double lon, HashMap<String, List<Owner>> owners) {
+    public RawNode(String name, String color, int ownership, double lat, double lon, HashMap<String, List<Owner>> owners) {
+        this.name = name;
         this.color = color;
         this.ownership = ownership;
         this.lat = lat;
@@ -22,6 +24,9 @@ public class RawNode {
         this.owners = owners;
     }
 
+    public String getName() {
+        return name;
+    }
     public String getColor() {
         return color;
     }
@@ -38,6 +43,9 @@ public class RawNode {
         return owners;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
     public void setColor(String color) {
         this.color = color;
     }

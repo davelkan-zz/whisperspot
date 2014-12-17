@@ -43,14 +43,6 @@
         android:visibility="invisible"
         android:layout_gravity="center_horizontal|top" />
 
-    <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:text="Menu"
-        android:id="@+id/menu"
-        android:layout_gravity="right|top" />
-
     <TextView
         android:layout_width="140dp"
         android:layout_height="64dp"
@@ -58,14 +50,6 @@
         android:id="@+id/about"
         android:visibility="invisible"
         android:layout_gravity="right|top" />
-
-    <Button
-        android:layout_width="74dp"
-        android:layout_height="wrap_content"
-        android:text="close"
-        android:id="@+id/closeMenu"
-        android:layout_gravity="center_horizontal|top"
-        android:visibility="invisible"/>
 
     <TextView
         android:layout_width="252dp"

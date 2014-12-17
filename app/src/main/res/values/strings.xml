@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">mapv2</string>
+    <string name="app_name">WhisperSpot</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_initial_setup">InitialSetup</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="blue_team">Blue</string>
+    <string name="red_team">Red</string>
+    <string name="welcome_agent">Welcome agent.</string>
+    <string name="name_input">What is your name?</string>
+    <string name="choose_name">Choose your username.</string>
+    <string name="team_input">What is your quest?</string>
+    <string name="join_bowler">Join the classy bowler hat spy society?</string>
+    <string name="join_fedora">Join the trendy fedora hat spy coalition?</string>
     <string name="menu_show_node_info_prompt">Show Node Info</string>
+    <string name="menu_hide_node_info_prompt">Hide Node Info</string>
+    <string name="menu_set_dev_mode_on_prompt">Turn Dev Mode ON</string>
+    <string name="menu_set_dev_mode_off_prompt">Turn Dev Mode OFF</string>
 
 </resources>
