@@ -3,15 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MapActivity" >
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/map"
+        tools:context=".MapsActivity"
+        android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
-
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/map"
-    tools:context=".MapsActivity"
-    android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
     <Button
         android:layout_width="wrap_content"
@@ -23,16 +22,17 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Decrypt Message"
-        android:id="@+id/dcptmsg"
+        android:text="Gather Intel"
+        android:id="@+id/tkmsg"
         android:visibility="invisible"
-        android:layout_gravity="right|top" />
+        android:layout_gravity="left|top" />
+
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Gather Intel"
-        android:id="@+id/tkmsg"
+        android:text="Decrypt Message"
+        android:id="@+id/dcptmsg"
         android:visibility="invisible"
         android:layout_gravity="left|top" />
 
@@ -42,35 +42,35 @@
         android:text="Deliver Intel"
         android:id="@+id/lvmsg"
         android:visibility="invisible"
+        android:layout_gravity="center_horizontal|top" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="Menu"
+        android:id="@+id/menu"
         android:layout_gravity="right|top" />
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/message_display"
-        android:layout_gravity="center|top"
-        android:visibility="invisible"
-        android:text="Text goes here" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Submit"
-        android:id="@+id/sbmtmsg"
-        android:visibility="invisible"
-        android:layout_gravity="left|top" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Abort"
-        android:id="@+id/cnclmsg"
+        android:layout_width="140dp"
+        android:layout_height="64dp"
+        android:text=""
+        android:id="@+id/about"
         android:visibility="invisible"
         android:layout_gravity="right|top" />
 
+    <Button
+        android:layout_width="74dp"
+        android:layout_height="wrap_content"
+        android:text="close"
+        android:id="@+id/closeMenu"
+        android:layout_gravity="center_horizontal|top"
+        android:visibility="invisible"/>
+
     <TextView
-        android:layout_width="292dp"
-        android:layout_height="109dp"
+        android:layout_width="252dp"
+        android:layout_height="180dp"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text=""
         android:visibility="invisible"
@@ -78,17 +78,29 @@
         android:background="@color/wallet_holo_blue_light"
         android:layout_gravity="center" />
 
+    <TextView
+        android:layout_width="243dp"
+        android:layout_height="187dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Medium Text"
+        android:id="@+id/nodeStats"
+        android:visibility="invisible"
+        android:layout_gravity="left|bottom" />
 
-     <EditText
-         android:layout_width="match_parent"
-         android:layout_height="255dp"
-         android:textAppearance="?android:attr/textAppearanceMedium"
-         android:text="Enter Message Here"
-         android:id="@+id/message"
-         android:visibility="invisible"
-         android:background="@color/material_blue_grey_800"
-         android:layout_gravity="center_horizontal|bottom" />
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="239dp"
+        android:layout_height="50dp"
+        android:id="@+id/ownerBar"
+        android:layout_gravity="left|bottom"
+        android:visibility="invisible"
+        android:layout_marginBottom="10dp" />
 
-
+    <Spinner
+        android:layout_width="117dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/node_selector"
+        android:layout_gravity="right|top"
+        android:layout_marginTop="25dp" />
 
 </FrameLayout>

@@ -9,15 +9,25 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Random;
 
 import com.firebase.client.Firebase;
@@ -35,7 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class MapsActivity extends FragmentActivity {
+public class MapsActivity extends FragmentActivity{
     private String TAG = "MapsActivity";
     public String APP_NAME = "Whisperspot";
     public GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -54,12 +64,19 @@ public class MapsActivity extends FragmentActivity {
     private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
     private Set<String> visitedNodes;
+    //private Array knownNodes;
 
     Button leave_intel;
     Button take_intel;
     Button leave_trap;
     Button decrypt_intel;
+    Button menu;
+    Button closeMenu;
     TextView pop_up;
+    TextView about;
+    Spinner node_selector;
+    TextView nodeStats;
+    ProgressBar ownerBar;
     int mapState = 0;
     public Marker myLocation;
     int zoom = 17;
@@ -71,9 +88,9 @@ public class MapsActivity extends FragmentActivity {
         Log.i("STARTUP", "====================================");
         Firebase.setAndroidContext(this);
         setupFirebase();
-        initButtons();
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
         visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
+        initButtons();
         setUpMapIfNeeded();
     }
 
@@ -353,13 +370,70 @@ public class MapsActivity extends FragmentActivity {
         leave_trap = (Button) findViewById(R.id.lvtrp);
         decrypt_intel = (Button) findViewById(R.id.dcptmsg);
         pop_up = (TextView) findViewById(R.id.popUp);
+        node_selector = (Spinner) findViewById(R.id.node_selector);
+        menu = (Button) findViewById(R.id.menu);
+        closeMenu = (Button) findViewById(R.id.closeMenu);
+        about = (TextView) findViewById(R.id.about);
+        nodeStats = (TextView) findViewById(R.id.nodeStats);
+        ownerBar = (ProgressBar) findViewById(R.id.ownerBar);
+        about.setText("Username: " + userName + "\nFaction: " + allyColor);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        //TODO: Convert visited hashmap to Array usable by array adapter
+        if(visitedNodes == null) {
+            Log.i("pipe", "FUCK FUCK FUCK FUCK");
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedNodes));
+        // Apply the adapter to the spinner
+        node_selector.setAdapter(adapter);
+        node_selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedFromList = node_selector.getItemAtPosition(position).toString();
+                nodeStats.setText(selectedFromList);
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+                /*new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectedFromList = node_selector.getItemAtPosition(position).toString();
+                nodeStats.setText(selectedFromList);
+                //TODO: identify node selected
+                //TODO: modify nodeStats Textview based on identified node
+                //TODO: show nodeStats TextView and zoom on selected node
+            }
+        });*/
+        closeMenu.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                menu.setVisibility(View.VISIBLE);
+                about.setVisibility(View.INVISIBLE);
+                node_selector.setVisibility(View.INVISIBLE);
+                nodeStats.setVisibility(View.INVISIBLE);
+                closeMenu.setVisibility(View.INVISIBLE);
+                ownerBar.setVisibility(View.INVISIBLE);
+
+            }
+        });
+        menu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                closeMenu.setVisibility(View.VISIBLE);
+                about.setVisibility(View.VISIBLE);
+                node_selector.setVisibility(View.VISIBLE);
+                nodeStats.setVisibility(View.VISIBLE);
+                menu.setVisibility(View.INVISIBLE);
+                ownerBar.setVisibility(View.VISIBLE);
+            }
+        });
         leave_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //cancel_message.setVisibility(View.VISIBLE);
-                //submit_message.setVisibility(View.VISIBLE);
-                //message.setVisibility(View.VISIBLE);
                 take_intel.setVisibility(View.INVISIBLE);
                 leave_intel.setVisibility(View.INVISIBLE);
                 mapState = 2;
