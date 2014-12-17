@@ -3,12 +3,15 @@ package com.example.davelkan.mapv2;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -30,6 +33,7 @@ import java.util.Iterator;
 import java.util.Random;
 
 import com.firebase.client.Firebase;
+import com.firebase.client.collection.LLRBNode;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -59,7 +63,7 @@ public class MapsActivity extends FragmentActivity{
     private Toast oldToast = null;
     private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
-    private Set<String> visitedNodes;
+    private Set<String> visitedDevices;
     private boolean devMode = true;
 
     Button leave_intel;
@@ -86,11 +90,9 @@ public class MapsActivity extends FragmentActivity{
         setupFirebase();
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
 //        preferences.edit().remove("visitedNodes").apply();
-        visitedNodes = preferences.getStringSet("visitedNodes", new HashSet<String>());
-
-        initButtons();
-
+        visitedDevices = preferences.getStringSet("visitedNodes", new HashSet<String>());
         initUser();
+
 
         setUpMapIfNeeded();
     }
@@ -159,9 +161,10 @@ public class MapsActivity extends FragmentActivity{
         }
         nodes.get(node.getColor()).add(node);
 
-        if (visitedNodes.contains(node.getDevice())) {
+        if (visitedDevices.contains(node.getDevice())) {
             drawNode(node);
         }
+        initButtons();
     }
 
     public void drawNode(Node node) {
@@ -318,10 +321,10 @@ public class MapsActivity extends FragmentActivity{
             }
             if (!foundNode.equals(activeNode)) {
                 zoomTo(foundNode, 19);
-                if (!visitedNodes.contains(foundNode.getDevice())) {
-                    visitedNodes.add(foundNode.getDevice());
+                if (!visitedDevices.contains(foundNode.getDevice())) {
+                    visitedDevices.add(foundNode.getDevice());
                     preferences.edit().remove("visitedNodes").apply();
-                    preferences.edit().putStringSet("visitedNodes", visitedNodes).apply();
+                    preferences.edit().putStringSet("visitedNodes", visitedDevices).apply();
                     drawNode(foundNode);
                 }
                 toastify("entered " + foundNode.getDevice());
@@ -350,6 +353,9 @@ public class MapsActivity extends FragmentActivity{
 
     private void zoomBelow(Node node) {
         zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
+    }
+    private void zoomBelow(LatLng latLng) {
+        zoomTo(new LatLng(latLng.latitude - 0.00025, latLng.longitude), 19);
     }
 
     //check to see if you're in a node
@@ -395,38 +401,67 @@ public class MapsActivity extends FragmentActivity{
         about = (TextView) findViewById(R.id.about);
         nodeStats = (TextView) findViewById(R.id.nodeStats);
         ownerBar = (ProgressBar) findViewById(R.id.ownerBar);
+        ownerBar.setMax(100);
         about.setText("Username: " + user.getName() + "\nFaction: " + user.getColor());
         // Create an ArrayAdapter using the string array and a default spinner layout
         //TODO: Convert visited hashmap to Array usable by array adapter
-        if(visitedNodes == null) {
+        if(visitedDevices == null) {
             Log.i("pipe", "FUCK FUCK FUCK FUCK");
         }
-        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedNodes));
+        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedDevices));
         // Apply the adapter to the spinner
         node_selector.setAdapter(adapter);
         node_selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedFromList = node_selector.getItemAtPosition(position).toString();
-                nodeStats.setText(selectedFromList);
-            }
+                Log.i("what i want",selectedFromList);
+                LatLng elementCenter = null;
+                if(nodes.get("red") != null) {
+                    for (Node element : nodes.get("red")) {
+                        if (selectedFromList.equals(element.getDevice())) {
+                            elementCenter = element.getCenter();
+                            zoomBelow(elementCenter);
+                            nodeStats.setText("WhisperSpot Location: " + elementCenter.toString() + "\n" + "Controlling Faction: Red Bowlers");
+                            int percentage = (element.getOwnership()+100)/2;
+                            ownerBar.setProgress(percentage);
+                            //ownerBar.setProgressBackgroundTintList();
+                            ownerBar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
+                            ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.BLUE));
 
+
+                            //ownerBar.
+                        }
+                    }
+                }
+                if(elementCenter == null && nodes.get("blue") != null){
+                    for (Node element2 : nodes.get("blue")) {
+                        if (selectedFromList.equals(element2.getDevice())) {
+                            LatLng element2Center = element2.getCenter();
+                            zoomBelow(element2Center);
+                            nodeStats.setText("WhisperSpot Location: " + element2Center.toString() + "\n"  + "Controlling Faction: Blue Fedoras");
+                            int percentage = (element2.getOwnership()+100)/2;
+                            ownerBar.setProgress(percentage);
+                            ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
+                            ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.RED));
+
+                        }
+                    }
+                        //selectedFromList = nodes.get("red")node_selector.getItemAtPosition(position);
+                }
+
+            }
+                //nodeStats.setText(selectedFromList);
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
         });
-                /*new AdapterView.OnItemClickListener() {
 
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String selectedFromList = node_selector.getItemAtPosition(position).toString();
-                nodeStats.setText(selectedFromList);
-                //TODO: identify node selected
-                //TODO: modify nodeStats Textview based on identified node
-                //TODO: show nodeStats TextView and zoom on selected node
-            }
-        });*/
+        //TODO: identify node selected
+        //TODO: modify nodeStats Textview based on identified node
+        //TODO: show nodeStats TextView and zoom on selected node
+
         closeMenu.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
