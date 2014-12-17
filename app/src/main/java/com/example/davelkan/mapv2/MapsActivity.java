@@ -40,7 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class MapsActivity extends FragmentActivity{
+public class MapsActivity extends FragmentActivity {
+    private Menu menu;
     private String TAG = "MapsActivity";
     public String APP_NAME = "Whisperspot";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -62,8 +63,6 @@ public class MapsActivity extends FragmentActivity{
     Button take_intel;
     Button leave_trap;
     Button decrypt_intel;
-    Button menu;
-    Button closeMenu;
     TextView pop_up;
     TextView about;
     Spinner node_selector;
@@ -216,7 +215,7 @@ public class MapsActivity extends FragmentActivity{
     }
 
     public void setDevMode(boolean newValue) {
-        toastify("Dev mode set to " + (newValue?"ON":"OFF") + " from " + (devMode?"ON":"OFF"));
+//        toastify("Dev mode set to " + (newValue?"ON":"OFF") + " from " + (devMode?"ON":"OFF"));
         devMode = newValue;
     }
 
@@ -388,8 +387,6 @@ public class MapsActivity extends FragmentActivity{
         decrypt_intel = (Button) findViewById(R.id.dcptmsg);
         pop_up = (TextView) findViewById(R.id.popUp);
         node_selector = (Spinner) findViewById(R.id.node_selector);
-        menu = (Button) findViewById(R.id.menu);
-        closeMenu = (Button) findViewById(R.id.closeMenu);
         about = (TextView) findViewById(R.id.about);
         nodeStats = (TextView) findViewById(R.id.nodeStats);
         ownerBar = (ProgressBar) findViewById(R.id.ownerBar);
@@ -425,29 +422,6 @@ public class MapsActivity extends FragmentActivity{
                 //TODO: show nodeStats TextView and zoom on selected node
             }
         });*/
-        closeMenu.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                menu.setVisibility(View.VISIBLE);
-                about.setVisibility(View.INVISIBLE);
-                node_selector.setVisibility(View.INVISIBLE);
-                nodeStats.setVisibility(View.INVISIBLE);
-                closeMenu.setVisibility(View.INVISIBLE);
-                ownerBar.setVisibility(View.INVISIBLE);
-
-            }
-        });
-        menu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                closeMenu.setVisibility(View.VISIBLE);
-                about.setVisibility(View.VISIBLE);
-                node_selector.setVisibility(View.VISIBLE);
-                nodeStats.setVisibility(View.VISIBLE);
-                menu.setVisibility(View.INVISIBLE);
-                ownerBar.setVisibility(View.VISIBLE);
-            }
-        });
         leave_intel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -576,21 +550,68 @@ public class MapsActivity extends FragmentActivity{
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
+        this.menu = menu;
         getMenuInflater().inflate(R.menu.my, menu);
+
+        hideOption(R.id.menu_hide_node_info);
+        if (devMode) {
+            hideOption(R.id.menu_set_dev_mode_on);
+        } else if (!devMode) {
+            hideOption(R.id.menu_set_dev_mode_off);
+        }
         return true;
     }
+
+    private void hideOption(int id)
+    {
+        MenuItem item = menu.findItem(id);
+        item.setVisible(false);
+    }
+
+    private void showOption(int id)
+    {
+        MenuItem item = menu.findItem(id);
+        item.setVisible(true);
+    }
+
+    private void setOptionTitle(int id, String title)
+    {
+        MenuItem item = menu.findItem(id);
+        item.setTitle(title);
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.menu_show_node_info:
-//                showListOfNodes();
+                showOption(R.id.menu_hide_node_info);
+                hideOption(R.id.menu_show_node_info);
+                about.setVisibility(View.VISIBLE);
+                node_selector.setVisibility(View.VISIBLE);
+                nodeStats.setVisibility(View.VISIBLE);
+                ownerBar.setVisibility(View.VISIBLE);
                 return true;
-            case R.id.menu_set_dev_mode:
-                Listeners.setDevModeListener(this);
+            case R.id.menu_hide_node_info:
+                showOption(R.id.menu_show_node_info);
+                hideOption(R.id.menu_hide_node_info);
+                about.setVisibility(View.INVISIBLE);
+                node_selector.setVisibility(View.INVISIBLE);
+                nodeStats.setVisibility(View.INVISIBLE);
+                ownerBar.setVisibility(View.INVISIBLE);
+                return true;
+            case R.id.menu_set_dev_mode_on:
+                showOption(R.id.menu_set_dev_mode_off);
+                hideOption(R.id.menu_set_dev_mode_on);
+                setDevMode(true);
+                return true;
+            case R.id.menu_set_dev_mode_off:
+                showOption(R.id.menu_set_dev_mode_on);
+                hideOption(R.id.menu_set_dev_mode_off);
+                setDevMode(false);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -25,26 +25,6 @@ public class Listeners {
         };
     }
 
-    public static void setDevModeListener(final MapsActivity activity) {
-        new AlertDialog.Builder(activity)
-                .setTitle("Set Developer Mode")
-                .setMessage("Select whether you would like dev mode 'on' or 'off'.")
-                .setNegativeButton("Off", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        activity.setDevMode(false);
-                        dialogInterface.dismiss();
-                    }
-                })
-                .setPositiveButton("On", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        activity.setDevMode(true);
-                        dialogInterface.dismiss();
-                    }
-                }).show();
-    }
-
     public static LocationListener getLocationListener(final MapsActivity activity) {
         return new LocationListener() {
             public void onLocationChanged(Location location) {

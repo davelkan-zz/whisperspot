@@ -4,6 +4,8 @@
     <string name="app_name">mapv2</string>
     <string name="title_activity_maps">Map</string>
     <string name="menu_show_node_info_prompt">Show Node Info</string>
-    <string name="menu_set_dev_mode">Set Dev Mode</string>
+    <string name="menu_hide_node_info_prompt">Hide Node Info</string>
+    <string name="menu_set_dev_mode_on_prompt">Turn Dev Mode ON</string>
+    <string name="menu_set_dev_mode_off_prompt">Turn Dev Mode OFF</string>
 
 </resources>
