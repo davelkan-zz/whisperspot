@@ -1,6 +1,7 @@
 package com.example.davelkan.mapv2;
 
 import com.example.davelkan.mapv2.util.Node;
+import com.example.davelkan.mapv2.util.NodeMap;
 import com.example.davelkan.mapv2.util.User;
 
 import java.util.Random;
@@ -10,9 +11,11 @@ import java.util.Random;
  */
 public class Intel {
     private Node node;
+    private User user;
 
-    public Intel() {
+    public Intel(User user) {
         this.node = null;
+        this.user = user;
     }
 
     public Node getNode() {
@@ -29,7 +32,8 @@ public class Intel {
         this.node = null;
     }
 
-    public String gatherIntel(Node node, User user) { // gathering intel at allied node... checking node color may be unnecessary
+    // gathering intel at allied node... checking node color may be unnecessary
+    public String gatherIntel(Node node) {
         if (node == null) {
             return "Return to the node to gather intel!";
         } else if (node.getColor().equalsIgnoreCase(user.getColor())) {
@@ -45,7 +49,7 @@ public class Intel {
         }
     }
 
-    public String returnIntel(Node activeNode, User user, MapsActivity activity) {
+    public String deliverIntel(Node activeNode, NodeMap nodes) {
         if (empty()) {
             return "You poor ignorant fool. You have no Intel to offer.";
         } else if (activeNode == null) {
@@ -57,7 +61,7 @@ public class Intel {
             int distance = (int) getNode().getDistance(activeNode.getCenter());
 
             int influence = 5 + distance / 200;
-            activeNode.captureByPoints(user, influence, activity);
+            activeNode.captureByPoints(user, influence, nodes);
             removeNode();
             return ("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
         }
@@ -65,7 +69,7 @@ public class Intel {
 
 
     //decrypt intel at enemy node
-    public String decryptIntel(Node activeNode, User user) {
+    public String decryptIntel(Node activeNode) {
         if (activeNode == null) {
             return "Return to the node to decrypt intel!";
         } else if (activeNode.getColor().equalsIgnoreCase(user.getEnemyColor())) {

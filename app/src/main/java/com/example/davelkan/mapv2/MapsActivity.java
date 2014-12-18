@@ -1,5 +1,6 @@
 package com.example.davelkan.mapv2;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,6 +29,8 @@ import android.widget.Toast;
 import java.util.HashSet;
 
 import com.example.davelkan.mapv2.util.Node;
+import com.example.davelkan.mapv2.util.NodeInfoFragment;
+import com.example.davelkan.mapv2.util.NodeMap;
 import com.example.davelkan.mapv2.util.RawNode;
 import com.example.davelkan.mapv2.util.User;
 import com.firebase.client.Firebase;
@@ -46,19 +49,19 @@ import java.util.List;
 import java.util.Set;
 
 public class MapsActivity extends FragmentActivity {
+    private static String TAG = "MapsActivity";
+    private static LatLng OLIN = new LatLng(42.2929, -71.2615);
     private Menu menu;
-    private String TAG = "MapsActivity";
     public String APP_NAME = "Whisperspot";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private BLEScanner scanner;
     private FirebaseUtils firebaseUtils;
-    private HashMap<String, List<Node>> nodes = new HashMap<>();
+    private NodeMap nodes = new NodeMap(this);
     private User user;
     private Node activeNode;
-    private Intel intel = new Intel();
+    private Intel intel;
     private Toast oldToast = null;
-    private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
     private Set<String> visitedDevices;
     private boolean devMode = false;
@@ -84,11 +87,18 @@ public class MapsActivity extends FragmentActivity {
         setContentView(R.layout.activity_maps);
         Log.i("STARTUP", "====================================");
         Firebase.setAndroidContext(this);
-        firebaseUtils = new FirebaseUtils(this);
+        firebaseUtils = new FirebaseUtils(nodes);
         initPreferences();
         initUser();
         initButtons();
         initMap();
+
+        // stuff for main activity
+//        if (savedInstanceState == null) {
+//            getFragmentManager().beginTransaction()
+//                    .add(R.id.container, new MapsFragment())
+//                    .commit();
+//        }
     }
 
     @Override
@@ -102,56 +112,11 @@ public class MapsActivity extends FragmentActivity {
         initMap();
     }
 
-    // scans for a Bluetooth device
-    public void runScanner(String device) {
-        scanner = new BLEScanner(this);
-        scanner.scanBLE(device);
+    // this goes in main activity
+    public void switchFragment(Fragment fragment) {
+        getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
     }
 
-
-
-    // NODE MANAGEMENT -- Do we need a nodeHandler thing?  Where SHOULD be store nodes (list of all node information)
-
-
-
-    // adds a node to list of nodes and draws on map
-    public void addNode(Node node) {
-        if (nodes.get(node.getColor()) == null) {
-            nodes.put(node.getColor(), new ArrayList<Node>());
-        }
-        nodes.get(node.getColor()).add(node);
-
-        if (visitedDevices.contains(node.getDevice())) {
-            drawNode(node);
-        }
-        initButtons();
-    }
-
-    // updates a node's information with new data
-    public void updateNode(Node node, RawNode data) {
-        if (!node.getColor().equalsIgnoreCase(data.getColor())) { // new color
-            updateNodeColor(node, node.getColor());
-        }
-        node.update(data);
-    }
-
-    public void updateNodeColor(Node node, String newColor) {
-        if (nodes.get(newColor) == null) { // add new color to nodes information
-            nodes.put(newColor, new ArrayList<Node>());
-        }
-        nodes.get(node.getColor()).remove(node);
-        nodes.get(newColor).add(node);
-        // TODO: reflect color change on map
-    }
-
-    private Node getNodeFromDevice(String device) {
-        for (List<Node> nodeList : nodes.values()) {
-            for (Node node : nodeList) {
-                if (device.equals(node.getDevice())) return node;
-            }
-        }
-        return null;
-    }
 
 
 
@@ -194,7 +159,19 @@ public class MapsActivity extends FragmentActivity {
         Log.i(TAG, "Team Color: " +  color);
 
         user = new User(userName, color);
+        intel = new Intel(user);
         firebaseUtils.retrieveUser(userName, user, preferences);
+    }
+
+    // goes in fragment to switch fragments
+    public void goToFragmentForNode(Node node) {
+//        ((MainActivity) getActivity()).switchFragment(new NodeInfoFragment());
+    }
+
+    // scans for a Bluetooth device
+    public void runScanner(String device) {
+        scanner = new BLEScanner(this);
+        scanner.scanBLE(device);
     }
 
 
@@ -250,7 +227,6 @@ public class MapsActivity extends FragmentActivity {
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setAllGesturesEnabled(true);
-        mMap.setOnMapClickListener(Listeners.getOnMapClickListener(this));
         mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(this));
 
         LocationListener locationListener = Listeners.getLocationListener(this);
@@ -265,7 +241,7 @@ public class MapsActivity extends FragmentActivity {
             locationListener.onLocationChanged(location);
             zoomTo(location, zoom);
         } else { // this is just so it zooms in on Olin if phone doesn't know where it is
-            zoomTo(olin, zoom);
+            zoomTo(OLIN, zoom);
         }
     }
 
@@ -290,7 +266,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void drawNode(Node node) {
-        if (mMap != null) {
+        if (mMap != null && visitedDevices.contains(node.getDevice())) {
             mMap.addCircle(new CircleOptions()
                     .center(node.getCenter())
                     .radius(25)
@@ -310,7 +286,6 @@ public class MapsActivity extends FragmentActivity {
         if (myLocation != null) {
             myLocation.remove();
         }
-        // TODO: Check if near undiscovered node only display those known
         myLocation = mMap.addMarker(new MarkerOptions().position(latLng).title("My Position"));
 
         Node foundNode = checkAllyProximity(latLng);
@@ -340,7 +315,7 @@ public class MapsActivity extends FragmentActivity {
                     drawNode(foundNode);
                 }
                 toastify("entered " + foundNode.getName());
-                firebaseUtils.pullNode(this, foundNode);
+                firebaseUtils.pullNode(nodes, foundNode);
                 //  activity.runScanner(foundNode.getDevice());
             }
             Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
@@ -351,40 +326,12 @@ public class MapsActivity extends FragmentActivity {
 
     //check to see if you're in a node
     public Node checkAllyProximity(LatLng latLng) {
-        return checkProximity(nodes.get(user.getColor()), latLng);
+        return nodes.checkProximity(user.getColor(), latLng);
     }
 
     //Check to see if you're in an enemy node
     public Node checkEnemyProximity(LatLng latLng) {
-        return checkProximity(nodes.get(user.getEnemyColor()), latLng);
-    }
-
-    //Check distance from given nodes, used for discovering unknown nodes
-    private Node checkProximity(List<Node> nodes, LatLng latLng) {
-        if (nodes == null || latLng == null) {
-            return null;
-        }
-        for (Node activeNode : nodes) {
-            if (activeNode.getDistance(latLng) < 25) {
-                System.out.print("in Range");
-                return activeNode;
-            }
-        }
-        return null;
-    }
-
-    public Node getNodeFromLatLng(LatLng point) {
-        if (nodes == null || point == null) {
-            return null;
-        }
-        for (List<Node> nodeList : nodes.values()) {
-            for (Node node : nodeList) {
-                if (node.getDistance(point) < 25) {
-                    return node;
-                }
-            }
-        }
-        return null;
+        return nodes.checkProximity(user.getEnemyColor(), latLng);
     }
 
 
@@ -413,46 +360,10 @@ public class MapsActivity extends FragmentActivity {
         //TODO: identify node selected
         //TODO: modify nodeStats Textview based on identified node
         //TODO: show nodeStats TextView and zoom on selected node
-/*
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String selectedFromList = node_selector.getItemAtPosition(position).toString();
-                nodeStats.setText(selectedFromList);
-                //TODO: identify node selected
-                //TODO: modify nodeStats Textview based on identified node
-                //TODO: show nodeStats TextView and zoom on selected node
-            }
-        });*/
-        leave_intel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mapState = 3;
-                displayButtons(mapState);
-                returnIntel();
-            }
-        });
-       take_intel.setOnClickListener(new View.OnClickListener() {
-           @Override
-           public void onClick(View v) {
-               mapState = 3;
-               displayButtons(mapState);
-               popUp(intel.gatherIntel(activeNode, user));
-           }
-       });
-        decrypt_intel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mapState = 4;
-                displayButtons(mapState);
-                popUp(intel.decryptIntel(activeNode, user));
-            }
-        });
-        leave_trap.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-            }
-        });
+        take_intel.setOnClickListener(Listeners.gatherIntel(this));
+        leave_intel.setOnClickListener(Listeners.deliverIntel(this));
+        decrypt_intel.setOnClickListener(Listeners.decryptIntel(this));
         pop_up.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -461,11 +372,12 @@ public class MapsActivity extends FragmentActivity {
         });
     }
 
-    private void returnIntel() {
-        popUp(intel.returnIntel(activeNode, user, this));
+    public void deliverIntel() {
+        popUp(intel.deliverIntel(activeNode, nodes));
         getFirebaseUtils().pushNode(activeNode);
         getFirebaseUtils().pushUser(user);
-        toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " + activeNode.getColor() + " " + activeNode.getOwnership());
+        toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " +
+                activeNode.getColor() + " " + activeNode.getOwnership());
     }
 
 
@@ -473,8 +385,11 @@ public class MapsActivity extends FragmentActivity {
     // DISPLAY -- should also be in button/node info display fragment
 
 
+    public void setMapState(int state) {
+        mapState = state;
+    }
 
-    private void displayButtons(int state) {
+    public void displayButtons(int state) {
         makeInvisible(); //Start from scratch, only enable buttons
         if (state == 0) { //Not in a node, no buttons
         } else if (state == 1) { //In an ally Node
@@ -585,8 +500,8 @@ public class MapsActivity extends FragmentActivity {
 
             }
         });
-
     }
+
     //populates the nodeStats window to inform users about the nodes.
     private Boolean showNodeStats(String selectedFromList, String faction){
 
@@ -617,5 +532,13 @@ public class MapsActivity extends FragmentActivity {
             }
         }
         return false;
+    }
+
+    public Intel getIntel() {
+        return intel;
+    }
+
+    public Node getActiveNode() {
+        return activeNode;
     }
 }

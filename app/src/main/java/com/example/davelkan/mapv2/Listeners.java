@@ -7,6 +7,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -14,15 +15,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
 public class Listeners {
-    public static GoogleMap.OnMapClickListener getOnMapClickListener(final MapsActivity activity) {
-        return new GoogleMap.OnMapClickListener() {
-            public void onMapClick(LatLng point) {
-//                node = activity.getNodeFromLatLng(point);
-//                activity.goToFragmentForNode(node);
-            }
-        };
-    }
-
     public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MapsActivity activity) {
         return new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng point) {
@@ -52,5 +44,40 @@ public class Listeners {
             public void onProviderDisabled(String provider) {
             }
         };
+    }
+
+
+    public static View.OnClickListener gatherIntel(final MapsActivity activity) {
+        return (new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.setMapState(4);
+                activity.displayButtons(4);
+                activity.popUp(activity.getIntel().gatherIntel(activity.getActiveNode()));
+            }
+        });
+    }
+
+    public static View.OnClickListener deliverIntel(final MapsActivity activity) {
+        return (new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.setMapState(4);
+                activity.displayButtons(4);
+                activity.deliverIntel();
+            }
+        });
+
+    }
+
+    public static View.OnClickListener decryptIntel(final MapsActivity activity) {
+        return (new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.setMapState(4);
+                activity.displayButtons(4);
+                activity.popUp(activity.getIntel().decryptIntel(activity.getActiveNode()));
+            }
+        });
     }
 }

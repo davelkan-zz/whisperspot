@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.example.davelkan.mapv2.util.Node;
+import com.example.davelkan.mapv2.util.NodeMap;
 import com.example.davelkan.mapv2.util.Owner;
 import com.example.davelkan.mapv2.util.RawNode;
 import com.example.davelkan.mapv2.util.RawUser;
@@ -31,10 +32,10 @@ public class FirebaseUtils {
         firebase = new Firebase(url);
     }
 
-    public FirebaseUtils(MapsActivity activity) {
+    public FirebaseUtils(NodeMap nodes) {
         firebase = new Firebase(url);
         resetFirebase(false);
-        populateNodes(activity);
+        populateNodes(nodes);
     }
 
     // wipes all nodestats from the Firebase
@@ -77,13 +78,13 @@ public class FirebaseUtils {
     }
 
     // requests update in information of a single node
-    public void pullNode(final MapsActivity activity, final Node node) {
+    public void pullNode(final NodeMap nodes, final Node node) {
         Firebase dataRef = firebase.child("nodes").child(node.getDevice());
         dataRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 try {
-                    activity.updateNode(node, snapshot.getValue(RawNode.class));
+                    nodes.updateNode(node, snapshot.getValue(RawNode.class));
                 } catch (FirebaseException e) {
                     Log.i("FIREBASE PULL", e.toString());
                 }
@@ -128,7 +129,7 @@ public class FirebaseUtils {
     }
 
     // pulls list of node data from firebase and creates Node objects for each
-    public void populateNodes(final MapsActivity activity) {
+    public void populateNodes(final NodeMap nodes) {
         Firebase dataRef = firebase.child("nodes");
         dataRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -136,7 +137,7 @@ public class FirebaseUtils {
                 for (DataSnapshot child : snapshot.getChildren()) {
                     try {
                         Node node = new Node(child.getValue(RawNode.class), child.getKey());
-                        activity.addNode(node);
+                        nodes.addNode(node);
                     } catch (FirebaseException e) {
                         Log.i("FIREBASE POPULATE", e.toString());
                     }
