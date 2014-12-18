@@ -1,21 +1,15 @@
 package com.example.davelkan.mapv2;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
 public class Listeners {
-    public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MapsActivity activity) {
+    public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MapsFragment activity) {
         return new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng point) {
                 if (point != null && activity.getDevMode()) {
@@ -25,7 +19,7 @@ public class Listeners {
         };
     }
 
-    public static LocationListener getLocationListener(final MapsActivity activity) {
+    public static LocationListener getLocationListener(final MapsFragment activity) {
         return new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
@@ -47,7 +41,7 @@ public class Listeners {
     }
 
 
-    public static View.OnClickListener gatherIntel(final MapsActivity activity) {
+    public static View.OnClickListener gatherIntel(final MapsFragment activity) {
         return (new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -58,7 +52,7 @@ public class Listeners {
         });
     }
 
-    public static View.OnClickListener deliverIntel(final MapsActivity activity) {
+    public static View.OnClickListener deliverIntel(final MapsFragment activity) {
         return (new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,7 +64,7 @@ public class Listeners {
 
     }
 
-    public static View.OnClickListener decryptIntel(final MapsActivity activity) {
+    public static View.OnClickListener decryptIntel(final MapsFragment activity) {
         return (new View.OnClickListener() {
             @Override
             public void onClick(View v) {

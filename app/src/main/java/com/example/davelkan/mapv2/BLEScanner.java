@@ -1,6 +1,5 @@
 package com.example.davelkan.mapv2;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -21,7 +20,7 @@ public final class BLEScanner implements PreferenceManager.OnActivityResultListe
     private String deviceName;
     private BluetoothDevice device = null;
     private BluetoothAdapter mBLEAdapter = null;
-    private MapsActivity activity;
+    private MapsFragment activity;
     private static String TAG = "BLEScanner";
 
     private BluetoothAdapter.LeScanCallback mBLECallback = new BluetoothAdapter.LeScanCallback() {
@@ -36,7 +35,7 @@ public final class BLEScanner implements PreferenceManager.OnActivityResultListe
         }
     };
 
-    public BLEScanner(MapsActivity currentActivity) {
+    public BLEScanner(MapsFragment currentActivity) {
         activity = currentActivity;
     }
 

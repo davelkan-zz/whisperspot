@@ -48,7 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class MapsActivity extends FragmentActivity {
+public class MapsFragment extends FragmentActivity {
     private static String TAG = "MapsActivity";
     private static LatLng OLIN = new LatLng(42.2929, -71.2615);
     private Menu menu;
@@ -92,13 +92,6 @@ public class MapsActivity extends FragmentActivity {
         initUser();
         initButtons();
         initMap();
-
-        // stuff for main activity
-//        if (savedInstanceState == null) {
-//            getFragmentManager().beginTransaction()
-//                    .add(R.id.container, new MapsFragment())
-//                    .commit();
-//        }
     }
 
     @Override
@@ -110,11 +103,6 @@ public class MapsActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         initMap();
-    }
-
-    // this goes in main activity
-    public void switchFragment(Fragment fragment) {
-        getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
     }
 
 
