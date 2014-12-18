@@ -174,6 +174,15 @@ public class MapsActivity extends FragmentActivity {
         oldToast.show();
     }
 
+    private Node getNodeFromDevice(String device) {
+        for (List<Node> nodeList : nodes.values()) {
+            for (Node node : nodeList) {
+                if (device.equals(node.getDevice())) return node;
+            }
+        }
+        return null;
+    }
+
     public void setDevMode(boolean newValue) {
 //        toastify("Dev mode set to " + (newValue?"ON":"OFF") + " from " + (devMode?"ON":"OFF"));
         devMode = newValue;
@@ -182,6 +191,12 @@ public class MapsActivity extends FragmentActivity {
     public boolean getDevMode() {
         return devMode;
     }
+
+
+
+    // MAP
+
+
 
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
@@ -248,6 +263,32 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
+    private void zoomTo(LatLng latLng, int zoom) {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+    }
+
+    private void zoomTo(Node node, int zoom) {
+        zoomTo(node.getCenter(), zoom);
+    }
+
+    private void zoomTo(Location location, int zoom) {
+        zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
+    }
+
+    private void zoomBelow(Node node) {
+        zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
+    }
+
+    private void zoomBelow(LatLng latLng) {
+        zoomTo(new LatLng(latLng.latitude - 0.00025, latLng.longitude), 19);
+    }
+
+
+
+    // LOCATION
+
+
+
     public void updateLocation(LatLng latLng) {
         if (myLocation != null) {
             myLocation.remove();
@@ -291,27 +332,6 @@ public class MapsActivity extends FragmentActivity {
         displayButtons(mapState);
     }
 
-
-
-    private void zoomTo(LatLng latLng, int zoom) {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
-    }
-
-    private void zoomTo(Node node, int zoom) {
-        zoomTo(node.getCenter(), zoom);
-    }
-
-    private void zoomTo(Location location, int zoom) {
-        zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
-    }
-
-    private void zoomBelow(Node node) {
-        zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
-    }
-    private void zoomBelow(LatLng latLng) {
-        zoomTo(new LatLng(latLng.latitude - 0.00025, latLng.longitude), 19);
-    }
-
     //check to see if you're in a node
     public Node checkAllyProximity(LatLng latLng) {
         return checkProximity(nodes.get(user.getColor()), latLng);
@@ -336,6 +356,12 @@ public class MapsActivity extends FragmentActivity {
         }
         return null;
     }
+
+
+
+    // BUTTON INTERFACE
+
+
 
     public void initButtons() {
         leave_intel = (Button) findViewById(R.id.lvmsg);
@@ -412,6 +438,12 @@ public class MapsActivity extends FragmentActivity {
         toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " + activeNode.getColor() + " " + activeNode.getOwnership());
     }
 
+
+
+    // DISPLAY
+
+
+
     private void displayButtons(int state) {
         makeInvisible(); //Start from scratch, only enable buttons
         if (state == 0) { //Not in a node, no buttons
@@ -438,14 +470,11 @@ public class MapsActivity extends FragmentActivity {
         pop_up.setVisibility(View.VISIBLE);
     }
 
-    private Node getNodeFromDevice(String device) {
-        for (List<Node> nodeList : nodes.values()) {
-            for (Node node : nodeList) {
-                if (device.equals(node.getDevice())) return node;
-            }
-        }
-        return null;
-    }
+
+
+    // ACTION BAR
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -515,6 +544,12 @@ public class MapsActivity extends FragmentActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    
+
+    // WTF IS THIS STUFF?
+
+
 
     private void initNodeStates(){
         ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedDevices));
