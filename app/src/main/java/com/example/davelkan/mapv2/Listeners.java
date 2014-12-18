@@ -16,7 +16,7 @@ public class Listeners {
         return new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng point) {
                 if (point != null && activity.getDevMode()) {
-                    Listeners.onLocationUpdate(fragment, point);
+                    Listeners.onLocationUpdate(activity, fragment, point);
                 }
             }
         };
@@ -28,7 +28,7 @@ public class Listeners {
                 // Called when a new location is found by the network location provider.
                 if (location != null && !activity.getDevMode()) {
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    Listeners.onLocationUpdate(fragment, latLng);
+                    Listeners.onLocationUpdate(activity, fragment, latLng);
                 }
             }
 
@@ -44,15 +44,12 @@ public class Listeners {
         };
     }
 
-    public static void onLocationUpdate(MapsFragment fragment, LatLng latLng) {
+    public static void onLocationUpdate(MainActivity activity, MapsFragment fragment, LatLng latLng) {
         Node activeNode = fragment.getActiveNode();
 
         fragment.updateMarker(latLng);
 
-        Node foundNode = fragment.checkAllyProximity(latLng);
-        if (foundNode == null) {
-            foundNode = fragment.checkEnemyProximity(latLng);
-        }
+        Node foundNode = activity.nodes.getNodeFromLatLng(latLng);
 
         if (activeNode != null && activeNode != foundNode) {
             fragment.mainActivity.toastify("left " + activeNode.getName());

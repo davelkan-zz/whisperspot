@@ -259,20 +259,6 @@ public class MapsFragment extends Fragment {
         mainActivity.firebaseUtils.pullNode(mainActivity.nodes, foundNode);
     }
 
-    //check to see if you're in a node
-    public Node checkAllyProximity(LatLng latLng) {
-        return mainActivity.nodes.checkProximity(mainActivity.user.getColor(), latLng);
-    }
-
-    //Check to see if you're in an enemy node
-    public Node checkEnemyProximity(LatLng latLng) {
-        return mainActivity.nodes.checkProximity(mainActivity.user.getEnemyColor(), latLng);
-    }
-
-
-
-    // BUTTON INTERFACE -- should all be in another fragment (putting buttons on top of map == bad)
-
 
 
 //    public void initButtons() {

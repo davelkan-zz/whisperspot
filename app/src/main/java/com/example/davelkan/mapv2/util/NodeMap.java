@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * Created by mwismer on 12/17/14.
- */
 public class NodeMap {
     private HashMap<String, List<Node>> nodeMap;
     private MapsFragment activity;

@@ -60,7 +60,7 @@ public class InitialSetup extends FragmentActivity {
     public void joinTeam(View view, String color) {
         String userName = checkUserName();
         if (!userName.equals("")) {
-            Intent intent = new Intent(this, MapsFragment.class);
+            Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra(USERNAME, userName);
             intent.putExtra(TEAM, color);
 
