@@ -153,7 +153,7 @@ public class MapsFragment extends Fragment {
         return rootView;
     }
 
-
+    // called when fragment is created to ensure GPS is enabled
     private void initMap() {
         locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
 
@@ -164,7 +164,8 @@ public class MapsFragment extends Fragment {
         }
     }
 
-
+    // draw the map in the fragment and zoom to last known location, or Olin by default
+    // attach a location listener to the location manager
     private void setUpMap() {
         this.mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         this.mMap.getUiSettings().setAllGesturesEnabled(true);
@@ -206,6 +207,7 @@ public class MapsFragment extends Fragment {
         zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
     }
 
+    // puts a node circle on the Google Map
     public void drawNode(Node node) {
         if (mMap != null && mainActivity.visitedDevices.contains(node.getDevice())) {
             mMap.addCircle(new CircleOptions()
@@ -216,17 +218,20 @@ public class MapsFragment extends Fragment {
         }
     }
 
-
+    // move the user's location marker
     public void updateMarker(LatLng latLng) {
         if (myLocation != null) {
             myLocation.remove();
         }
+        // set the color of the marker to be the color of the user's team
         float hue = (mainActivity.user.getColor().equalsIgnoreCase("red"))?
                 BitmapDescriptorFactory.HUE_RED:BitmapDescriptorFactory.HUE_BLUE;
         myLocation = mMap.addMarker(new MarkerOptions().position(latLng).title("My Position")
                 .icon(BitmapDescriptorFactory.defaultMarker(hue)));
     }
 
+    // this is called upon entry to a new node
+    // refreshes the data from firebase and adds it to the list of found nodes
     public void enterNewNode(Node foundNode) {
         zoomTo(foundNode, 19);
         if (!mainActivity.visitedDevices.contains(foundNode.getDevice())) {
@@ -308,6 +313,7 @@ public class MapsFragment extends Fragment {
         });
     }
 
+    // called when delivering intel to another node (friend or foe)
     public void deliverIntel() {
         popUp(mainActivity.intel.deliverIntel(activeNode, mainActivity.nodes));
         if (mainActivity.intel.getNode() != activeNode) {
