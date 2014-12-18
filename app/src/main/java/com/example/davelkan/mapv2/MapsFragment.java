@@ -467,7 +467,7 @@ public class MapsFragment extends FragmentActivity {
     private void initNodeStates(){
         ArrayList<String> visitedTitles = new ArrayList<>();
         for(String id : visitedDevices){
-            visitedTitles.add(getNodeFromDevice(id).getName());
+            visitedTitles.add(nodes.getNodeFromDevice(id).getName());
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,visitedTitles);
         // Apply the adapter to the spinner(dropdown)

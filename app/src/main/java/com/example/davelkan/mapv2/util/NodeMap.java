@@ -54,7 +54,7 @@ public class NodeMap {
     }
 
 
-    private Node getNodeFromDevice(String device) {
+    public Node getNodeFromDevice(String device) {
         for (List<Node> nodeList : nodeMap.values()) {
             for (Node node : nodeList) {
                 if (device.equals(node.getDevice())) return node;
