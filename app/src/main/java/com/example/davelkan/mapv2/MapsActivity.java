@@ -1,5 +1,6 @@
 package com.example.davelkan.mapv2;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 import java.util.HashSet;
 
 import com.example.davelkan.mapv2.util.Node;
+import com.example.davelkan.mapv2.util.NodeInfoFragment;
 import com.example.davelkan.mapv2.util.RawNode;
 import com.example.davelkan.mapv2.util.User;
 import com.firebase.client.Firebase;
@@ -89,6 +91,13 @@ public class MapsActivity extends FragmentActivity {
         initUser();
         initButtons();
         initMap();
+
+        // stuff for main activity
+//        if (savedInstanceState == null) {
+//            getFragmentManager().beginTransaction()
+//                    .add(R.id.container, new MapsFragment())
+//                    .commit();
+//        }
     }
 
     @Override
@@ -102,10 +111,9 @@ public class MapsActivity extends FragmentActivity {
         initMap();
     }
 
-    // scans for a Bluetooth device
-    public void runScanner(String device) {
-        scanner = new BLEScanner(this);
-        scanner.scanBLE(device);
+    // this goes in main activity
+    public void switchFragment(Fragment fragment) {
+        getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
     }
 
 
@@ -195,6 +203,17 @@ public class MapsActivity extends FragmentActivity {
 
         user = new User(userName, color);
         firebaseUtils.retrieveUser(userName, user, preferences);
+    }
+
+    // goes in fragment to switch fragments
+    public void goToFragmentForNode(Node node) {
+//        ((MainActivity) getActivity()).switchFragment(new NodeInfoFragment());
+    }
+
+    // scans for a Bluetooth device
+    public void runScanner(String device) {
+        scanner = new BLEScanner(this);
+        scanner.scanBLE(device);
     }
 
 
