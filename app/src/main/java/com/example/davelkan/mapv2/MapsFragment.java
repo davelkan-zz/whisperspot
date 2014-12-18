@@ -31,7 +31,6 @@ import java.util.HashSet;
 import com.example.davelkan.mapv2.util.Node;
 import com.example.davelkan.mapv2.util.NodeInfoFragment;
 import com.example.davelkan.mapv2.util.NodeMap;
-import com.example.davelkan.mapv2.util.RawNode;
 import com.example.davelkan.mapv2.util.User;
 import com.firebase.client.Firebase;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -44,15 +43,13 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 
 public class MapsFragment extends FragmentActivity {
     private static String TAG = "MapsActivity";
     private static LatLng OLIN = new LatLng(42.2929, -71.2615);
+    public static String APP_NAME = "Whisperspot";
     private Menu menu;
-    public String APP_NAME = "Whisperspot";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private BLEScanner scanner;
@@ -113,9 +110,6 @@ public class MapsFragment extends FragmentActivity {
 
 
 
-    public FirebaseUtils getFirebaseUtils() {
-        return firebaseUtils;
-    }
 
     //    Make sure toasts don't stack (cancel previous toast before creating new one)
     public void toastify(String text) {
@@ -268,48 +262,23 @@ public class MapsFragment extends FragmentActivity {
     // LOCATION -- stays in this class, but maybe updateLocation should stay in its listener?
     // If so, how should we access all the MapsActivity variables it uses?
 
-
-
-    public void updateLocation(LatLng latLng) {
+    public void updateMarker(LatLng latLng) {
         if (myLocation != null) {
             myLocation.remove();
         }
         myLocation = mMap.addMarker(new MarkerOptions().position(latLng).title("My Position"));
+    }
 
-        Node foundNode = checkAllyProximity(latLng);
-        if (foundNode == null) foundNode = checkEnemyProximity(latLng);
-        if (activeNode != null && activeNode != foundNode) {
-            toastify("left " + activeNode.getName());
-            mapState = 0;
-            makeInvisible();
+    public void enterNewNode(Node foundNode) {
+        zoomTo(foundNode, 19);
+        if (!visitedDevices.contains(foundNode.getDevice())) {
+            visitedDevices.add(foundNode.getDevice());
+            preferences.edit().remove("visitedNodes").apply();
+            preferences.edit().putStringSet("visitedNodes", visitedDevices).apply();
+            drawNode(foundNode);
         }
-        if (foundNode == null) { // didn't find a node
-            activeNode = null;
-            Log.i("LOCATION UPDATE", "NOT IN A NODE");
-            mapState = 0;
-            makeInvisible();
-        } else { // found a node
-            if (foundNode.getColor().equals(user.getColor())) {
-                mapState = 1;
-            } else {
-                mapState = 2;
-            }
-            if (!foundNode.equals(activeNode)) {
-                zoomTo(foundNode, 19);
-                if (!visitedDevices.contains(foundNode.getDevice())) {
-                    visitedDevices.add(foundNode.getDevice());
-                    preferences.edit().remove("visitedNodes").apply();
-                    preferences.edit().putStringSet("visitedNodes", visitedDevices).apply();
-                    drawNode(foundNode);
-                }
-                toastify("entered " + foundNode.getName());
-                firebaseUtils.pullNode(nodes, foundNode);
-                //  activity.runScanner(foundNode.getDevice());
-            }
-            Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
-            activeNode = foundNode;
-        }
-        displayButtons(mapState);
+        toastify("entered " + foundNode.getName());
+        firebaseUtils.pullNode(nodes, foundNode);
     }
 
     //check to see if you're in a node
@@ -377,16 +346,16 @@ public class MapsFragment extends FragmentActivity {
         mapState = state;
     }
 
-    public void displayButtons(int state) {
+    public void displayButtons() {
         makeInvisible(); //Start from scratch, only enable buttons
-        if (state == 0) { //Not in a node, no buttons
-        } else if (state == 1) { //In an ally Node
+        if (mapState == 0) { //Not in a node, no buttons
+        } else if (mapState == 1) { //In an ally Node
             leave_intel.setVisibility(View.VISIBLE);
             take_intel.setVisibility(View.VISIBLE);
-        } else if (state == 2) { //In an enemy Node
+        } else if (mapState == 2) { //In an enemy Node
             leave_intel.setVisibility(View.VISIBLE);
             decrypt_intel.setVisibility(View.VISIBLE);
-        } else if (state == 3) { //Just left intel, took intel, or attempted to decrypt
+        } else if (mapState == 3) { //Just left intel, took intel, or attempted to decrypt
         }
     }
 
@@ -522,11 +491,23 @@ public class MapsFragment extends FragmentActivity {
         return false;
     }
 
+    public User getUser() {
+        return user;
+    }
+
     public Intel getIntel() {
         return intel;
     }
 
     public Node getActiveNode() {
         return activeNode;
+    }
+
+    public FirebaseUtils getFirebaseUtils() {
+        return firebaseUtils;
+    }
+
+    public void setActiveNode(Node activeNode) {
+        this.activeNode = activeNode;
     }
 }
