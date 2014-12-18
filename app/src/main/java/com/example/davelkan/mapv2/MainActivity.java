@@ -55,10 +55,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void switchFragment(Fragment fragment) {
-        getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
-    }
-
     public FirebaseUtils getFirebaseUtils() {
         return firebaseUtils;
     }

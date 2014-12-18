@@ -153,11 +153,6 @@ public class MapsFragment extends Fragment {
     }
 
 
-    public void goToFragmentForNode(Node node) {
-//        ((MainActivity) getActivity()).switchFragment(new NodeInfoFragment());
-    }
-
-
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
      * installed) and the map has not already been instantiated.. This will ensure that we only ever
@@ -193,6 +188,7 @@ public class MapsFragment extends Fragment {
     private void setUpMap() {
         this.mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         this.mMap.getUiSettings().setAllGesturesEnabled(true);
+        this.mMap.setOnMapClickListener(Listeners.getOnMapClickListener(mainActivity, this));
         this.mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(mainActivity, this));
         LocationListener locationListener = Listeners.getLocationListener(mainActivity, this);
 
@@ -241,8 +237,6 @@ public class MapsFragment extends Fragment {
     }
 
 
-    // LOCATION -- stays in this class, but maybe updateLocation should stay in its listener?
-    // If so, how should we access all the MapsActivity variables it uses?
 
     public void updateMarker(LatLng latLng) {
         if (myLocation != null) {
@@ -342,9 +336,6 @@ public class MapsFragment extends Fragment {
                     activeNode.getColor() + " " + activeNode.getOwnership());
         }
     }
-
-
-    // DISPLAY -- should also be in button/node info display fragment
 
 
     public void setMapState(int state) {
