@@ -269,6 +269,26 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
+    //helper function to zoom to a specific location at a specific zoom using LatLng
+    private void zoomTo(LatLng latLng, int zoom) {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+    }
+
+    //helper function to zoom to a specific location at a specific zoom using our Node class
+    private void zoomTo(Node node, int zoom) {
+        zoomTo(node.getCenter(), zoom);
+    }
+
+    //helper function to zoom to a specific location at a specific zoom using our Location
+    private void zoomTo(Location location, int zoom) {
+        zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
+    }
+
+    //Zooms to and slightly below a node using Node class - used to put the node in frame while viewing nodeStats
+    private void zoomBelow(Node node) {
+        zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
+    }
+
     public void drawNode(Node node) {
         if (mMap != null) {
             mMap.addCircle(new CircleOptions()
@@ -327,31 +347,6 @@ public class MapsActivity extends FragmentActivity {
             activeNode = foundNode;
         }
         displayButtons(mapState);
-    }
-
-    //helper function to zoom to a specific location at a specific zoom using LatLng
-    private void zoomTo(LatLng latLng, int zoom) {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
-    }
-
-    //helper function to zoom to a specific location at a specific zoom using our Node class
-    private void zoomTo(Node node, int zoom) {
-        zoomTo(node.getCenter(), zoom);
-    }
-
-    //helper function to zoom to a specific location at a specific zoom using our Location
-    private void zoomTo(Location location, int zoom) {
-        zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
-    }
-
-    //Zooms to and slightly below a node using Node class - used to put the node in frame while viewing nodeStats
-    private void zoomBelow(Node node) {
-        zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
-    }
-
-    //Zooms to and slightly below a node using LatLng - used to put the node in frame while viewing nodeStats
-    private void zoomBelow(LatLng latLng) {
-        zoomTo(new LatLng(latLng.latitude - 0.00025, latLng.longitude), 19);
     }
 
     //check to see if you're in a node
