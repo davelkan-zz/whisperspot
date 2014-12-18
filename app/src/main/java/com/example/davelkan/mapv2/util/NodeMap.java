@@ -73,19 +73,4 @@ public class NodeMap {
         }
         return null;
     }
-
-    //Check distance from given nodes, used for discovering unknown nodes
-    public Node checkProximity(String color, LatLng latLng) {
-        List<Node> nodes = nodeMap.get(color);
-        if (nodes == null || latLng == null) {
-            return null;
-        }
-        for (Node activeNode : nodes) {
-            if (activeNode.getDistance(latLng) < 25) {
-                System.out.print("in Range");
-                return activeNode;
-            }
-        }
-        return null;
-    }
 }
