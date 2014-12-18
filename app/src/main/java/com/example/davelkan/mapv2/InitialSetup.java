@@ -30,7 +30,7 @@ public class InitialSetup extends FragmentActivity {
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
 
         checkUserExists();
-        
+
         actionBar = getActionBar();
         try {
             actionBar.setDisplayShowHomeEnabled(false);
