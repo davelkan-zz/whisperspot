@@ -14,6 +14,14 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
 public class Listeners {
+    public static GoogleMap.OnMapClickListener getOnMapClickListener(final MapsActivity activity) {
+        return new GoogleMap.OnMapClickListener() {
+            public void onMapClick(LatLng point) {
+//                node = activity.getNodeFromLatLng(point);
+//                activity.goToFragmentForNode(node);
+            }
+        };
+    }
 
     public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MapsActivity activity) {
         return new GoogleMap.OnMapLongClickListener() {

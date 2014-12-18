@@ -250,6 +250,7 @@ public class MapsActivity extends FragmentActivity {
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setAllGesturesEnabled(true);
+        mMap.setOnMapClickListener(Listeners.getOnMapClickListener(this));
         mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(this));
 
         LocationListener locationListener = Listeners.getLocationListener(this);
@@ -263,9 +264,29 @@ public class MapsActivity extends FragmentActivity {
         if (location != null) {
             locationListener.onLocationChanged(location);
             zoomTo(location, zoom);
-        } else { // this is just so it zooms in on Olin even if it finds nothing
+        } else { // this is just so it zooms in on Olin if phone doesn't know where it is
             zoomTo(olin, zoom);
         }
+    }
+
+    //helper function to zoom to a specific location at a specific zoom using LatLng
+    private void zoomTo(LatLng latLng, int zoom) {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+    }
+
+    //helper function to zoom to a specific location at a specific zoom using our Node class
+    private void zoomTo(Node node, int zoom) {
+        zoomTo(node.getCenter(), zoom);
+    }
+
+    //helper function to zoom to a specific location at a specific zoom using our Location
+    private void zoomTo(Location location, int zoom) {
+        zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
+    }
+
+    //Zooms to and slightly below a node using Node class - used to put the node in frame while viewing nodeStats
+    private void zoomBelow(Node node) {
+        zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
     }
 
     public void drawNode(Node node) {
@@ -281,7 +302,7 @@ public class MapsActivity extends FragmentActivity {
 
 
     // LOCATION -- stays in this class, but maybe updateLocation should stay in its listener?
-    // If so, how should be access all the MapsActivity variables it uses?
+    // If so, how should we access all the MapsActivity variables it uses?
 
 
 
@@ -328,31 +349,6 @@ public class MapsActivity extends FragmentActivity {
         displayButtons(mapState);
     }
 
-    //helper function to zoom to a specific location at a specific zoom using LatLng
-    private void zoomTo(LatLng latLng, int zoom) {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
-    }
-
-    //helper function to zoom to a specific location at a specific zoom using our Node class
-    private void zoomTo(Node node, int zoom) {
-        zoomTo(node.getCenter(), zoom);
-    }
-
-    //helper function to zoom to a specific location at a specific zoom using our Location
-    private void zoomTo(Location location, int zoom) {
-        zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
-    }
-
-    //Zooms to and slightly below a node using Node class - used to put the node in frame while viewing nodeStats
-    private void zoomBelow(Node node) {
-        zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
-    }
-
-    //Zooms to and slightly below a node using LatLng - used to put the node in frame while viewing nodeStats
-    private void zoomBelow(LatLng latLng) {
-        zoomTo(new LatLng(latLng.latitude - 0.00025, latLng.longitude), 19);
-    }
-
     //check to see if you're in a node
     public Node checkAllyProximity(LatLng latLng) {
         return checkProximity(nodes.get(user.getColor()), latLng);
@@ -365,16 +361,27 @@ public class MapsActivity extends FragmentActivity {
 
     //Check distance from given nodes, used for discovering unknown nodes
     private Node checkProximity(List<Node> nodes, LatLng latLng) {
-        if (nodes == null) {
-            return null;
-        }
-        if (latLng == null) {
+        if (nodes == null || latLng == null) {
             return null;
         }
         for (Node activeNode : nodes) {
             if (activeNode.getDistance(latLng) < 25) {
                 System.out.print("in Range");
                 return activeNode;
+            }
+        }
+        return null;
+    }
+
+    public Node getNodeFromLatLng(LatLng point) {
+        if (nodes == null || point == null) {
+            return null;
+        }
+        for (List<Node> nodeList : nodes.values()) {
+            for (Node node : nodeList) {
+                if (node.getDistance(point) < 25) {
+                    return node;
+                }
             }
         }
         return null;
@@ -582,10 +589,11 @@ public class MapsActivity extends FragmentActivity {
     }
     //populates the nodeStats window to inform users about the nodes.
     private Boolean showNodeStats(String selectedFromList, String faction){
+
         for (Node element : nodes.get(faction)) {
             if (selectedFromList.equals(element.getName())) {
                 LatLng elementCenter = element.getCenter();
-                zoomBelow(elementCenter);
+                zoomTo(elementCenter,19);
                 if (faction.equalsIgnoreCase("blue")) {
                     faction = "Blue Fedoras";
                     ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
