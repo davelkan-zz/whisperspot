@@ -4,7 +4,6 @@ import android.graphics.Color;
 import android.location.Location;
 import android.util.Log;
 
-import com.example.davelkan.mapv2.MapsActivity;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
@@ -164,7 +163,7 @@ public class Node {
     }
 
     // add points to this node by color of capturing team
-    public void captureByPoints(User user, int points, MapsActivity activity) {
+    public void captureByPoints(User user, int points, NodeMap nodes) {
         String captureColor = user.getColor();
         String userName = user.getName();
 
@@ -184,7 +183,7 @@ public class Node {
             if (ownership < 0) {
                 ownership *= -1;
                 setColor(captureColor);
-                activity.updateNodeColor(this, user.getColor());
+                nodes.updateNodeColor(this, user.getColor());
                 user.addPoints(CAPTURE_BONUS);
             }
         }

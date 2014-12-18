@@ -30,6 +30,7 @@ import java.util.HashSet;
 
 import com.example.davelkan.mapv2.util.Node;
 import com.example.davelkan.mapv2.util.NodeInfoFragment;
+import com.example.davelkan.mapv2.util.NodeMap;
 import com.example.davelkan.mapv2.util.RawNode;
 import com.example.davelkan.mapv2.util.User;
 import com.firebase.client.Firebase;
@@ -56,7 +57,7 @@ public class MapsActivity extends FragmentActivity {
     private LocationManager locationManager;
     private BLEScanner scanner;
     private FirebaseUtils firebaseUtils;
-    private HashMap<String, List<Node>> nodes = new HashMap<>();
+    private NodeMap nodes = new NodeMap(this);
     private User user;
     private Node activeNode;
     private Intel intel;
@@ -86,7 +87,7 @@ public class MapsActivity extends FragmentActivity {
         setContentView(R.layout.activity_maps);
         Log.i("STARTUP", "====================================");
         Firebase.setAndroidContext(this);
-        firebaseUtils = new FirebaseUtils(this);
+        firebaseUtils = new FirebaseUtils(nodes);
         initPreferences();
         initUser();
         initButtons();
@@ -116,50 +117,6 @@ public class MapsActivity extends FragmentActivity {
         getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
     }
 
-
-
-    // NODE MANAGEMENT -- Do we need a nodeHandler thing?  Where SHOULD be store nodes (list of all node information)
-
-
-
-    // adds a node to list of nodes and draws on map
-    public void addNode(Node node) {
-        if (nodes.get(node.getColor()) == null) {
-            nodes.put(node.getColor(), new ArrayList<Node>());
-        }
-        nodes.get(node.getColor()).add(node);
-
-        if (visitedDevices.contains(node.getDevice())) {
-            drawNode(node);
-        }
-        initButtons();
-    }
-
-    // updates a node's information with new data
-    public void updateNode(Node node, RawNode data) {
-        if (!node.getColor().equalsIgnoreCase(data.getColor())) { // new color
-            updateNodeColor(node, node.getColor());
-        }
-        node.update(data);
-    }
-
-    public void updateNodeColor(Node node, String newColor) {
-        if (nodes.get(newColor) == null) { // add new color to nodes information
-            nodes.put(newColor, new ArrayList<Node>());
-        }
-        nodes.get(node.getColor()).remove(node);
-        nodes.get(newColor).add(node);
-        // TODO: reflect color change on map
-    }
-
-    private Node getNodeFromDevice(String device) {
-        for (List<Node> nodeList : nodes.values()) {
-            for (Node node : nodeList) {
-                if (device.equals(node.getDevice())) return node;
-            }
-        }
-        return null;
-    }
 
 
 
@@ -309,7 +266,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void drawNode(Node node) {
-        if (mMap != null) {
+        if (mMap != null && visitedDevices.contains(node.getDevice())) {
             mMap.addCircle(new CircleOptions()
                     .center(node.getCenter())
                     .radius(25)
@@ -358,7 +315,7 @@ public class MapsActivity extends FragmentActivity {
                     drawNode(foundNode);
                 }
                 toastify("entered " + foundNode.getName());
-                firebaseUtils.pullNode(this, foundNode);
+                firebaseUtils.pullNode(nodes, foundNode);
                 //  activity.runScanner(foundNode.getDevice());
             }
             Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
@@ -369,40 +326,12 @@ public class MapsActivity extends FragmentActivity {
 
     //check to see if you're in a node
     public Node checkAllyProximity(LatLng latLng) {
-        return checkProximity(nodes.get(user.getColor()), latLng);
+        return nodes.checkProximity(user.getColor(), latLng);
     }
 
     //Check to see if you're in an enemy node
     public Node checkEnemyProximity(LatLng latLng) {
-        return checkProximity(nodes.get(user.getEnemyColor()), latLng);
-    }
-
-    //Check distance from given nodes, used for discovering unknown nodes
-    private Node checkProximity(List<Node> nodes, LatLng latLng) {
-        if (nodes == null || latLng == null) {
-            return null;
-        }
-        for (Node activeNode : nodes) {
-            if (activeNode.getDistance(latLng) < 25) {
-                System.out.print("in Range");
-                return activeNode;
-            }
-        }
-        return null;
-    }
-
-    public Node getNodeFromLatLng(LatLng point) {
-        if (nodes == null || point == null) {
-            return null;
-        }
-        for (List<Node> nodeList : nodes.values()) {
-            for (Node node : nodeList) {
-                if (node.getDistance(point) < 25) {
-                    return node;
-                }
-            }
-        }
-        return null;
+        return nodes.checkProximity(user.getEnemyColor(), latLng);
     }
 
 
@@ -444,7 +373,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void deliverIntel() {
-        popUp(intel.deliverIntel(activeNode, this));
+        popUp(intel.deliverIntel(activeNode, nodes));
         getFirebaseUtils().pushNode(activeNode);
         getFirebaseUtils().pushUser(user);
         toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " +
@@ -567,8 +496,8 @@ public class MapsActivity extends FragmentActivity {
 
             }
         });
-
     }
+
     //populates the nodeStats window to inform users about the nodes.
     private Boolean showNodeStats(String selectedFromList, String faction){
         for (Node node : nodes.get(faction)) {
