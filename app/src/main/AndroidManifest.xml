@@ -35,10 +35,10 @@
 
         <activity
             android:name=".InitialSetup"
-            android:label="@string/title_activity_initial_setup" >
+            android:label="@string/title_activity_initial_setup"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
