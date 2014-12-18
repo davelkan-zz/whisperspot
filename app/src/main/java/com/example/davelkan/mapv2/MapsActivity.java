@@ -373,11 +373,13 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void deliverIntel() {
-        popUp(intel.deliverIntel(activeNode, nodes));
-        getFirebaseUtils().pushNode(activeNode);
-        getFirebaseUtils().pushUser(user);
-        toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " +
-                activeNode.getColor() + " " + activeNode.getOwnership());
+            popUp(intel.deliverIntel(activeNode, nodes));
+        if(intel.getNode() != activeNode) {
+            getFirebaseUtils().pushNode(activeNode);
+            getFirebaseUtils().pushUser(user);
+            toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " +
+                    activeNode.getColor() + " " + activeNode.getOwnership());
+        }
     }
 
 
@@ -479,7 +481,7 @@ public class MapsActivity extends FragmentActivity {
     private void initNodeStates(){
         ArrayList<String> visitedTitles = new ArrayList<>();
         for(String id : visitedDevices){
-            visitedTitles.add(getNodeFromDevice(id).getName());
+            visitedTitles.add(nodes.getNodeFromDevice(id).getName());
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,visitedTitles);
         // Apply the adapter to the spinner(dropdown)
@@ -508,7 +510,7 @@ public class MapsActivity extends FragmentActivity {
         for (Node element : nodes.get(faction)) {
             if (selectedFromList.equals(element.getName())) {
                 LatLng elementCenter = element.getCenter();
-                zoomTo(elementCenter,19);
+                zoomBelow(element);
                 if (faction.equalsIgnoreCase("blue")) {
                     faction = "Blue Fedoras";
                     ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
