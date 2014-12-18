@@ -431,16 +431,7 @@ public class MapsActivity extends FragmentActivity {
         //TODO: identify node selected
         //TODO: modify nodeStats Textview based on identified node
         //TODO: show nodeStats TextView and zoom on selected node
-/*
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String selectedFromList = node_selector.getItemAtPosition(position).toString();
-                nodeStats.setText(selectedFromList);
-                //TODO: identify node selected
-                //TODO: modify nodeStats Textview based on identified node
-                //TODO: show nodeStats TextView and zoom on selected node
-            }
-        });*/
+
         take_intel.setOnClickListener(Listeners.gatherIntel(this));
         leave_intel.setOnClickListener(Listeners.deliverIntel(this));
         decrypt_intel.setOnClickListener(Listeners.decryptIntel(this));
