@@ -1,5 +1,6 @@
 package com.example.davelkan.mapv2;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
@@ -33,6 +34,7 @@ public class MainActivity extends Activity {
     public User user;
     public boolean nodeInfo = false;
     public MapsFragment mapsFragment;
+    public ActionBar actionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,14 @@ public class MainActivity extends Activity {
 
         initPreferences();
         initUser();
+
+        actionBar = getActionBar();
+        try {
+            actionBar.setDisplayShowHomeEnabled(false);
+            actionBar.setDisplayShowTitleEnabled(false);
+        } catch (NullPointerException e) {
+            Log.i(TAG, e.toString());
+        }
 
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction()

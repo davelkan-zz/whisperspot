@@ -31,6 +31,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -220,7 +221,10 @@ public class MapsFragment extends Fragment {
         if (myLocation != null) {
             myLocation.remove();
         }
-        myLocation = mMap.addMarker(new MarkerOptions().position(latLng).title("My Position"));
+        float hue = (mainActivity.user.getColor().equalsIgnoreCase("red"))?
+                BitmapDescriptorFactory.HUE_RED:BitmapDescriptorFactory.HUE_BLUE;
+        myLocation = mMap.addMarker(new MarkerOptions().position(latLng).title("My Position")
+                .icon(BitmapDescriptorFactory.defaultMarker(hue)));
     }
 
     public void enterNewNode(Node foundNode) {

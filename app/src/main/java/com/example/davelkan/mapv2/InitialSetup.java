@@ -1,5 +1,6 @@
 package com.example.davelkan.mapv2;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
@@ -19,6 +20,7 @@ public class InitialSetup extends FragmentActivity {
     public final static String USERNAME = "com.example.davelkan.mapv2.USERNAME";
     public final static String TEAM = "com.example.davelkan.mapv2.TEAM";
     private SharedPreferences preferences;
+    public ActionBar actionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +30,14 @@ public class InitialSetup extends FragmentActivity {
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
 
         checkUserExists();
+        
+        actionBar = getActionBar();
+        try {
+            actionBar.setDisplayShowHomeEnabled(false);
+            actionBar.setDisplayShowTitleEnabled(false);
+        } catch (NullPointerException e) {
+            Log.i(TAG, e.toString());
+        }
 
         setContentView(R.layout.activity_initial_setup);
         if (savedInstanceState == null) {
