@@ -9,9 +9,18 @@ import android.view.View;
 import com.example.davelkan.mapv2.util.Node;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 public class Listeners {
+    public static GoogleMap.OnMapClickListener getOnMapClickListener(final MainActivity activity, final MapsFragment fragment) {
+        return new GoogleMap.OnMapClickListener() {
+            public void onMapClick(LatLng point) {
+                if (point != null) {
+//                    Listeners.onLocationUpdate(activity, fragment, point);
+                }
+            }
+        };
+    }
+
     public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MainActivity activity, final MapsFragment fragment) {
         return new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng point) {
