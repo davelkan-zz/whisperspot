@@ -49,6 +49,8 @@ public class Intel {
         }
     }
 
+//    deliver intel, ideally at a friendly node
+//    will give the user a status bar in the node menu
     public String deliverIntel(Node activeNode, NodeMap nodes) {
         if (empty()) {
             return "You poor ignorant fool. You have no Intel to offer.";

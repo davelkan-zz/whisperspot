@@ -53,6 +53,8 @@ public class Listeners {
         };
     }
 
+//    The node menu will appear if a user clicks on a node
+// though the buttons will not be enabled
     public static void onNodeClick(MainActivity activity, MapsFragment fragment, LatLng latLng) {
         Node activeNode = fragment.getActiveNode();
         Node foundNode = activity.nodes.getNodeFromLatLng(latLng);
@@ -77,7 +79,7 @@ public class Listeners {
         fragment.displayButtons();
     }
 
-
+//    Will activate the node menu if a user is in a node
     public static void onLocationUpdate(MainActivity activity, MapsFragment fragment, LatLng latLng) {
         Node activeNode = fragment.getActiveNode();
 
@@ -109,6 +111,7 @@ public class Listeners {
         fragment.displayButtons();
     }
 
+//    Will change the display accordingly when the user gathers intel
     public static View.OnClickListener gatherIntel(final MapsFragment activity) {
         return (new View.OnClickListener() {
             @Override
@@ -120,6 +123,7 @@ public class Listeners {
         });
     }
 
+//    Will change the display accordingly when the user delivers intel
     public static View.OnClickListener deliverIntel(final MapsFragment activity) {
         return (new View.OnClickListener() {
             @Override
@@ -132,6 +136,7 @@ public class Listeners {
 
     }
 
+//    Will change the display accordingly when the user tries to decrypt intel
     public static View.OnClickListener decryptIntel(final MapsFragment activity) {
         return (new View.OnClickListener() {
             @Override

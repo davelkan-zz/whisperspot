@@ -27,8 +27,11 @@ public class InitialSetup extends FragmentActivity {
         super.onCreate(savedInstanceState);
         Log.i("SETUP", "====================================");
 
+//        Load the possibly previously set user preferences
+//        May include the username, the user's team color, and the user's known nodes
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
 
+//        Check if the user has already been initialized
         checkUserExists();
 
         actionBar = getActionBar();
@@ -47,6 +50,8 @@ public class InitialSetup extends FragmentActivity {
         }
     }
 
+//    Checks if the user has already an account created on their phone
+//    If so, the main app activity starts
     public void checkUserExists() {
         String userName = preferences.getString("username", null);
         String color = preferences.getString("color", null);
@@ -59,14 +64,17 @@ public class InitialSetup extends FragmentActivity {
         }
     }
 
+//    Called when the user decides to join the bowler hat team
     public void joinBowler(View view) {
         joinTeam(view, "red");
     }
 
+//    Called when the user decides to join the fedora team
     public void joinFedora(View view) {
         joinTeam(view, "blue");
     }
 
+//    Sets the user's team and color, then begins the main app activity
     public void joinTeam(View view, String color) {
         String userName = checkUserName();
         if (!userName.equals("")) {
@@ -89,6 +97,7 @@ public class InitialSetup extends FragmentActivity {
         }
     }
 
+//    Will complain to the user if they enter a blank username
     public String checkUserName() {
         EditText nameEdit;
         String userName;
