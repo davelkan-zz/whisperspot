@@ -18,7 +18,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -55,7 +54,6 @@ public class MapsFragment extends Fragment {
 
     Button leave_intel;
     Button take_intel;
-    Button leave_trap;
     Button decrypt_intel;
     TextView pop_up;
     TextView about;
@@ -148,21 +146,10 @@ public class MapsFragment extends Fragment {
         return rootView;
     }
 
-    // APP-WIDE -- should go in main Activity?  So MapsActivity should be a fragment?
 
-
-
-
-
-    // goes in fragment to switch fragments
     public void goToFragmentForNode(Node node) {
 //        ((MainActivity) getActivity()).switchFragment(new NodeInfoFragment());
     }
-
-
-
-    // MAP -- Stays in this class, and should be some of the only stuff here
-
 
 
     /**

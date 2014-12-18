@@ -48,13 +48,13 @@ public class MainActivity extends Activity {
         initPreferences();
         initUser();
 
-
-        getFragmentManager().beginTransaction()
-                .add(R.id.container, mapsFragment)
-                .commit();
+        if (savedInstanceState == null) {
+            getFragmentManager().beginTransaction()
+                    .add(R.id.container, mapsFragment)
+                    .commit();
+        }
     }
 
-    // this goes in main activity
     public void switchFragment(Fragment fragment) {
         getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
     }
@@ -62,8 +62,8 @@ public class MainActivity extends Activity {
     public FirebaseUtils getFirebaseUtils() {
         return firebaseUtils;
     }
+
     public void setDevMode(boolean newValue) {
-//        toastify("Dev mode set to " + (newValue?"ON":"OFF") + " from " + (devMode?"ON":"OFF"));
         devMode = newValue;
     }
 
@@ -104,7 +104,6 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         this.menu = menu;
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;

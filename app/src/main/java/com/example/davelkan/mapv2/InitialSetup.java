@@ -13,8 +13,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.firebase.client.Firebase;
-
 
 public class InitialSetup extends FragmentActivity {
     private final static String TAG = "InitialSetup";
@@ -27,7 +25,6 @@ public class InitialSetup extends FragmentActivity {
         super.onCreate(savedInstanceState);
         Log.i("SETUP", "====================================");
 
-        Firebase.setAndroidContext(this);
         preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
 
         checkUserExists();
