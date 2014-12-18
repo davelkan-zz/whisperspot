@@ -1,4 +1,4 @@
-package com.example.davelkan.mapv2;
+package com.example.davelkan.mapv2.util;
 
 import java.util.HashMap;
 import java.util.List;

@@ -1,9 +1,10 @@
-package com.example.davelkan.mapv2;
+package com.example.davelkan.mapv2.util;
 
 import android.graphics.Color;
 import android.location.Location;
 import android.util.Log;
 
+import com.example.davelkan.mapv2.MapsActivity;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;

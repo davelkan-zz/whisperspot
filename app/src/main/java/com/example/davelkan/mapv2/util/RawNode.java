@@ -1,6 +1,4 @@
-package com.example.davelkan.mapv2;
-
-import com.google.android.gms.maps.model.LatLng;
+package com.example.davelkan.mapv2.util;
 
 import java.util.HashMap;
 import java.util.List;

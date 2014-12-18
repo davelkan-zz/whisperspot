@@ -26,10 +26,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashSet;
-import java.util.Random;
 
+import com.example.davelkan.mapv2.util.Node;
+import com.example.davelkan.mapv2.util.RawNode;
+import com.example.davelkan.mapv2.util.User;
 import com.firebase.client.Firebase;
-import com.firebase.client.collection.LLRBNode;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;

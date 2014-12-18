@@ -1,5 +1,8 @@
 package com.example.davelkan.mapv2;
 
+import com.example.davelkan.mapv2.util.Node;
+import com.example.davelkan.mapv2.util.User;
+
 import java.util.Random;
 
 /**
