@@ -65,10 +65,12 @@ public class MainActivity extends Activity {
         }
     }
 
+    // retrieve the firebase handler
     public FirebaseUtils getFirebaseUtils() {
         return firebaseUtils;
     }
 
+    // change the developer mode, which allows for longClicks to trigger location updates
     public void setDevMode(boolean newValue) {
         devMode = newValue;
     }
@@ -101,7 +103,7 @@ public class MainActivity extends Activity {
         firebaseUtils.retrieveUser(userName, user, preferences);
     }
 
-    //    Make sure toasts don't stack (cancel previous toast before creating new one)
+    // make sure toasts don't stack (cancel previous toast before creating new one)
     public void toastify(String text) {
         if (oldToast != null) oldToast.cancel();
         oldToast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
@@ -115,16 +117,19 @@ public class MainActivity extends Activity {
         return true;
     }
 
+    // sets a menu option to invisible
     private void hideOption(int id) {
         MenuItem item = menu.findItem(id);
         item.setVisible(false);
     }
 
+    // sets a menu option to visible
     private void showOption(int id) {
         MenuItem item = menu.findItem(id);
         item.setVisible(true);
     }
 
+    // changes the display name (String) of a menu option to a new one
     private void setOptionTitle(int id, String title) {
         MenuItem item = menu.findItem(id);
         item.setTitle(title);
@@ -137,10 +142,6 @@ public class MainActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-//            case R.id.menu_toggle_node_info:
-//                setOptionTitle(R.id.menu_toggle_node_info, "Turn Node Info " + (nodeInfo?"ON":"OFF"));
-//                mapsFragment.setNodeInfo(!nodeInfo);
-//                return true;
             case R.id.menu_toggle_dev_mode:
                 setOptionTitle(R.id.menu_toggle_dev_mode, "Turn Dev Mode " + (devMode?"ON":"OFF"));
                 setDevMode(!devMode);

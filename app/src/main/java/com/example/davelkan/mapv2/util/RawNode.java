@@ -11,8 +11,10 @@ public class RawNode {
     private double lon;
     private HashMap<String, List<Owner>> owners;
 
+    // empty constructor
     public RawNode() {}
 
+    // constructor used to re-create this data type from Node for storage back in Firebase
     public RawNode(String name, String color, int ownership, double lat, double lon, HashMap<String, List<Owner>> owners) {
         this.name = name;
         this.color = color;
@@ -22,6 +24,7 @@ public class RawNode {
         this.owners = owners;
     }
 
+    // get RawNode properties (needed for Firebase type bounce)
     public String getName() {
         return name;
     }
@@ -41,6 +44,7 @@ public class RawNode {
         return owners;
     }
 
+    // set RawNode properties (needed for Firebase type bounce)
     public void setName(String name) {
         this.name = name;
     }

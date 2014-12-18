@@ -11,6 +11,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
 public class Listeners {
+    // listener to check if user is clicking on a node (requesting information about it)
     public static GoogleMap.OnMapClickListener getOnMapClickListener(final MainActivity activity, final MapsFragment fragment) {
         return new GoogleMap.OnMapClickListener() {
             public void onMapClick(LatLng point) {
@@ -21,6 +22,7 @@ public class Listeners {
         };
     }
 
+    // listener to check if user would like to request a manual location update (if in dev mode)
     public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MainActivity activity, final MapsFragment fragment) {
         return new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng point) {
@@ -31,6 +33,7 @@ public class Listeners {
         };
     }
 
+    // location listener from location manager to receive GPS location information
     public static LocationListener getLocationListener(final MainActivity activity, final MapsFragment fragment) {
         return new LocationListener() {
             public void onLocationChanged(Location location) {
@@ -53,8 +56,8 @@ public class Listeners {
         };
     }
 
-//    The node menu will appear if a user clicks on a node
-// though the buttons will not be enabled
+    // called when a user short clicks a node, requesting information without traveling to it
+    // the buttons will not be enabled
     public static void onNodeClick(MainActivity activity, MapsFragment fragment, LatLng latLng) {
         Node activeNode = fragment.getActiveNode();
         Node foundNode = activity.nodes.getNodeFromLatLng(latLng);
@@ -79,7 +82,7 @@ public class Listeners {
         fragment.displayButtons();
     }
 
-//    Will activate the node menu if a user is in a node
+    // called when a user moves to a new location, either using devMode or GPS updates
     public static void onLocationUpdate(MainActivity activity, MapsFragment fragment, LatLng latLng) {
         Node activeNode = fragment.getActiveNode();
 

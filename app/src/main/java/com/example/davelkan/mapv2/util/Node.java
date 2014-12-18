@@ -19,6 +19,7 @@ public class Node {
     private LatLng center;
     private HashMap<String, List<Owner>> owners;
 
+    // empty constructor with default/test values
     public Node() {
         this.device = "testDevice";
         this.name = "testName";
@@ -28,6 +29,7 @@ public class Node {
         this.owners = new HashMap<>();
     }
 
+    // to create a Node from Firebase (stored as RawNodes)
     public Node(RawNode rawNode, String device) {
         this.device = device;
         this.name = rawNode.getName();
@@ -37,6 +39,7 @@ public class Node {
         this.owners = rawNode.getOwners();
     }
 
+    // to create a Node with literals or by entry boxes
     public Node(String device, String name, String color, int ownership, LatLng center, HashMap<String, List<Owner>> owners) {
         this.device = device;
         this.name = name;
@@ -46,10 +49,12 @@ public class Node {
         this.owners = owners;
     }
 
+    // converting a Node back to a RawNode for storage in Firebase
     public RawNode getRawNode() {
         return new RawNode(name, color, ownership, center.latitude, center.longitude, owners);
     }
 
+    // setting values of a node
     public void setDevice(String device) {
         this.device = device;
     }
@@ -75,6 +80,7 @@ public class Node {
         this.owners = owners;
     }
 
+    // getting values of a node
     public String getDevice() {
         return device;
     }
@@ -132,9 +138,11 @@ public class Node {
         setOwners(data.getOwners());
     }
 
+    // subtract used capture points from other team's list of owners
     public void stealPointsFromPreviousOwners(User user, int usedPoints) {
-        // subtract used capture points from other team's list of owners
+        // get list of owners of this node on the other team
         List<Owner> otherOwners = owners.get(user.getEnemyColor());
+        // value to decrement as points are transferred from other team to this user
         int pointsToRemove = usedPoints;
         while (pointsToRemove > 0) {
             // start removing from beginning of list (oldest owners)
@@ -156,6 +164,7 @@ public class Node {
         }
     }
 
+    // find arc length distance between this node and LatLng point
     public float getDistance(LatLng other) {
         float[] res = new float[]{0};
         Location.distanceBetween(getCenter().latitude, getCenter().longitude, other.latitude, other.longitude, res);
