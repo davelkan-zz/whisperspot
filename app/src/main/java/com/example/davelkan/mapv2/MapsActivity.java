@@ -555,7 +555,11 @@ public class MapsActivity extends FragmentActivity {
 
     //Initiates nodeStats window and calls function to populate it
     private void initNodeStates(){
-        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedDevices));
+        ArrayList<String> visitedTitles = new ArrayList<>();
+        for(String id : visitedDevices){
+            visitedTitles.add(getNodeFromDevice(id).getName());
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,visitedTitles);
         // Apply the adapter to the spinner(dropdown)
         node_selector.setAdapter(adapter);
         //used a listener to check if new item selected
@@ -579,7 +583,7 @@ public class MapsActivity extends FragmentActivity {
     //populates the nodeStats window to inform users about the nodes.
     private Boolean showNodeStats(String selectedFromList, String faction){
         for (Node element : nodes.get(faction)) {
-            if (selectedFromList.equals(element.getDevice())) {
+            if (selectedFromList.equals(element.getName())) {
                 LatLng elementCenter = element.getCenter();
                 zoomBelow(elementCenter);
                 if (faction.equalsIgnoreCase("blue")) {

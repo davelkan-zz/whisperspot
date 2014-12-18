@@ -50,7 +50,10 @@ public class Intel {
             return "You poor ignorant fool. You have no Intel to offer.";
         } else if (activeNode == null) {
             return "Return to the node to return intel!";
-        } else {
+        } else if (this.node == activeNode) {
+            return "This intel has no value here. Deliver it to another WhisperSpot";
+        }
+        else {
             int distance = (int) getNode().getDistance(activeNode.getCenter());
 
             int influence = 5 + distance / 200;
