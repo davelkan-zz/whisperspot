@@ -1,5 +1,7 @@
 package com.example.davelkan.mapv2.util;
 
+import android.util.Log;
+
 /**
  * Created by mwismer on 12/16/14.
  */
@@ -18,6 +20,8 @@ public class User {
     }
 
     public void updateWith(RawUser user) {
+        Log.i("DebugDebug", user.toString());
+        Log.i("DebugDebug", userInfo.toString());
         user.setPoints(user.getPoints() + userInfo.getPoints());
         userInfo = user;
     }

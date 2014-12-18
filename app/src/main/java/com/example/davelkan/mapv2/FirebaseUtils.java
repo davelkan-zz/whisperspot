@@ -109,6 +109,7 @@ public class FirebaseUtils {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
+                    Log.i("DebugDebug", dataSnapshot.getValue(RawUser.class).toString());
                     userToUpdate.updateWith(dataSnapshot.getValue(RawUser.class));
                     preferences.edit().putString("color", userToUpdate.getColor()).apply();
                 } catch (FirebaseException e) {

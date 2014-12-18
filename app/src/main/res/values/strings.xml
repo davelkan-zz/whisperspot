@@ -17,5 +17,10 @@
     <string name="menu_toggle_node_info_prompt">Toggle Node Info</string>
     <string name="menu_toggle_dev_mode_prompt">Toggle Dev Mode</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="leave_trap">Leave Trap</string>
+    <string name="gather_intel">Gather Intel</string>
+    <string name="deliver_intel">Deliver Intel</string>
+    <string name="decrypt_message">Decrypt Message</string>
 
 </resources>
