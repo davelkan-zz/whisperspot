@@ -3,6 +3,7 @@ package com.example.davelkan.mapv2;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.example.davelkan.mapv2.util.Node;
@@ -43,7 +44,7 @@ public class Listeners {
         };
     }
 
-    public static void onLocationUpdate(MapsActivity activity, LatLng latLng) {
+    public static void onLocationUpdate(MapsFragment activity, LatLng latLng) {
         Node activeNode = activity.getActiveNode();
 
         activity.updateMarker(latLng);
