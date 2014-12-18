@@ -2,20 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MyActivity" >
-    <item android:id="@+id/menu_show_node_info"
-        android:title="@string/menu_show_node_info_prompt"
+    <item android:id="@+id/menu_toggle_node_info"
+        android:title="@string/menu_toggle_node_info_prompt"
         android:orderInCategory="100"
         android:showAsAction="never" />
-    <item android:id="@+id/menu_hide_node_info"
-        android:title="@string/menu_hide_node_info_prompt"
-        android:orderInCategory="100"
-        android:showAsAction="never" />
-    <item android:id="@+id/menu_set_dev_mode_on"
-        android:title="@string/menu_set_dev_mode_on_prompt"
-        android:orderInCategory="100"
-        android:showAsAction="never" />
-    <item android:id="@+id/menu_set_dev_mode_off"
-        android:title="@string/menu_set_dev_mode_off_prompt"
+    <item android:id="@+id/menu_toggle_dev_mode"
+        android:title="@string/menu_toggle_dev_mode_prompt"
         android:orderInCategory="100"
         android:showAsAction="never" />
 </menu>

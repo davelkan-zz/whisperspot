@@ -61,6 +61,7 @@ public class MapsActivity extends FragmentActivity {
     private SharedPreferences preferences;
     private Set<String> visitedDevices;
     private boolean devMode = false;
+    private boolean nodeInfo = false;
     //private boolean dontZoom = true;
 
     Button leave_intel;
@@ -100,28 +101,17 @@ public class MapsActivity extends FragmentActivity {
         initMap();
     }
 
-    private void initPreferences() {
-        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
-        visitedDevices = preferences.getStringSet("visitedNodes", new HashSet<String>());
-    }
-
-    private void initUser() {
-        Intent intent = getIntent();
-        String userName = intent.getStringExtra(InitialSetup.USERNAME);
-        String color = intent.getStringExtra(InitialSetup.TEAM);
-
-        Log.i(TAG, "Username: " + userName);
-        Log.i(TAG, "Team Color: " +  color);
-
-        user = new User(userName, color);
-        firebaseUtils.retrieveUser(userName, user, preferences);
-    }
-
     // scans for a Bluetooth device
     public void runScanner(String device) {
         scanner = new BLEScanner(this);
         scanner.scanBLE(device);
     }
+
+
+
+    // NODE MANAGEMENT -- Do we need a nodeHandler thing?  Where SHOULD be store nodes (list of all node information)
+
+
 
     // adds a node to list of nodes and draws on map
     public void addNode(Node node) {
@@ -134,16 +124,6 @@ public class MapsActivity extends FragmentActivity {
             drawNode(node);
         }
         initButtons();
-    }
-
-    public void drawNode(Node node) {
-        if (mMap != null) {
-            mMap.addCircle(new CircleOptions()
-                    .center(node.getCenter())
-                    .radius(25)
-                    .strokeColor(node.getAllyColor())
-                    .fillColor(Color.TRANSPARENT));
-        }
     }
 
     // updates a node's information with new data
@@ -163,6 +143,22 @@ public class MapsActivity extends FragmentActivity {
         // TODO: reflect color change on map
     }
 
+    private Node getNodeFromDevice(String device) {
+        for (List<Node> nodeList : nodes.values()) {
+            for (Node node : nodeList) {
+                if (device.equals(node.getDevice())) return node;
+            }
+        }
+        return null;
+    }
+
+
+
+    // APP-WIDE -- should go in main Activity?  So MapsActivity should be a fragment?
+
+
+
+
     public FirebaseUtils getFirebaseUtils() {
         return firebaseUtils;
     }
@@ -174,15 +170,6 @@ public class MapsActivity extends FragmentActivity {
         oldToast.show();
     }
 
-    private Node getNodeFromDevice(String device) {
-        for (List<Node> nodeList : nodes.values()) {
-            for (Node node : nodeList) {
-                if (device.equals(node.getDevice())) return node;
-            }
-        }
-        return null;
-    }
-
     public void setDevMode(boolean newValue) {
 //        toastify("Dev mode set to " + (newValue?"ON":"OFF") + " from " + (devMode?"ON":"OFF"));
         devMode = newValue;
@@ -192,9 +179,26 @@ public class MapsActivity extends FragmentActivity {
         return devMode;
     }
 
+    private void initPreferences() {
+        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
+        visitedDevices = preferences.getStringSet("visitedNodes", new HashSet<String>());
+    }
+
+    private void initUser() {
+        Intent intent = getIntent();
+        String userName = intent.getStringExtra(InitialSetup.USERNAME);
+        String color = intent.getStringExtra(InitialSetup.TEAM);
+
+        Log.i(TAG, "Username: " + userName);
+        Log.i(TAG, "Team Color: " +  color);
+
+        user = new User(userName, color);
+        firebaseUtils.retrieveUser(userName, user, preferences);
+    }
 
 
-    // MAP
+
+    // MAP -- Stays in this class, and should be some of the only stuff here
 
 
 
@@ -283,9 +287,20 @@ public class MapsActivity extends FragmentActivity {
         zoomTo(new LatLng(latLng.latitude - 0.00025, latLng.longitude), 19);
     }
 
+    public void drawNode(Node node) {
+        if (mMap != null) {
+            mMap.addCircle(new CircleOptions()
+                    .center(node.getCenter())
+                    .radius(25)
+                    .strokeColor(node.getAllyColor())
+                    .fillColor(Color.TRANSPARENT));
+        }
+    }
 
 
-    // LOCATION
+
+    // LOCATION -- stays in this class, but maybe updateLocation should stay in its listener?
+    // If so, how should be access all the MapsActivity variables it uses?
 
 
 
@@ -359,7 +374,7 @@ public class MapsActivity extends FragmentActivity {
 
 
 
-    // BUTTON INTERFACE
+    // BUTTON INTERFACE -- should all be in another fragment (putting buttons on top of map == bad)
 
 
 
@@ -440,7 +455,7 @@ public class MapsActivity extends FragmentActivity {
 
 
 
-    // DISPLAY
+    // DISPLAY -- should also be in button/node info display fragment
 
 
 
@@ -470,9 +485,19 @@ public class MapsActivity extends FragmentActivity {
         pop_up.setVisibility(View.VISIBLE);
     }
 
+    private void setNodeInfo(boolean value) {
+        nodeInfo = value;
+        int visibility = (value)?View.VISIBLE:View.INVISIBLE;
+        about.setVisibility(visibility);
+        node_selector.setVisibility(visibility);
+        nodeStats.setVisibility(visibility);
+        ownerBar.setVisibility(visibility);
+        if (value) initNodeStates();
+    }
 
 
-    // ACTION BAR
+
+    // ACTION BAR -- Listeners should be moved to Listeners class, but how do we access all the visibility stuff?
 
 
 
@@ -481,13 +506,6 @@ public class MapsActivity extends FragmentActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         this.menu = menu;
         getMenuInflater().inflate(R.menu.my, menu);
-
-        hideOption(R.id.menu_hide_node_info);
-        if (devMode) {
-            hideOption(R.id.menu_set_dev_mode_on);
-        } else {
-            hideOption(R.id.menu_set_dev_mode_off);
-        }
         return true;
     }
 
@@ -513,41 +531,22 @@ public class MapsActivity extends FragmentActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-            case R.id.menu_show_node_info:
-                showOption(R.id.menu_hide_node_info);
-                hideOption(R.id.menu_show_node_info);
-                about.setVisibility(View.VISIBLE);
-                node_selector.setVisibility(View.VISIBLE);
-                nodeStats.setVisibility(View.VISIBLE);
-                ownerBar.setVisibility(View.VISIBLE);
-                initNodeStates();
+            case R.id.menu_toggle_node_info:
+                setOptionTitle(R.id.menu_toggle_node_info, "Turn Node Info " + (nodeInfo?"ON":"OFF"));
+                setNodeInfo(!nodeInfo);
                 return true;
-            case R.id.menu_hide_node_info:
-                showOption(R.id.menu_show_node_info);
-                hideOption(R.id.menu_hide_node_info);
-                about.setVisibility(View.INVISIBLE);
-                node_selector.setVisibility(View.INVISIBLE);
-                nodeStats.setVisibility(View.INVISIBLE);
-                ownerBar.setVisibility(View.INVISIBLE);
-                return true;
-            case R.id.menu_set_dev_mode_on:
-                showOption(R.id.menu_set_dev_mode_off);
-                hideOption(R.id.menu_set_dev_mode_on);
-                setDevMode(true);
-                return true;
-            case R.id.menu_set_dev_mode_off:
-                showOption(R.id.menu_set_dev_mode_on);
-                hideOption(R.id.menu_set_dev_mode_off);
-                setDevMode(false);
+            case R.id.menu_toggle_dev_mode:
+                setOptionTitle(R.id.menu_toggle_dev_mode, "Turn Dev Mode " + (devMode?"ON":"OFF"));
+                setDevMode(!devMode);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    
 
-    // WTF IS THIS STUFF?
+
+    // WAT DOES THIS DO?
 
 
 
@@ -577,14 +576,14 @@ public class MapsActivity extends FragmentActivity {
             if (selectedFromList.equals(element.getDevice())) {
                 LatLng elementCenter = element.getCenter();
                 zoomBelow(elementCenter);
-                if (faction == "blue") {
+                if (faction.equalsIgnoreCase("blue")) {
                     faction = "Blue Fedoras";
                     ownerBar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
                     if (Build.VERSION.SDK_INT >= 21) {
                         ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.BLUE));
                     }
 
-                } else if (faction == "red") {
+                } else if (faction.equalsIgnoreCase("red")) {
                     faction = "Red Bowlers";
                     ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
                     if (Build.VERSION.SDK_INT >= 21) {

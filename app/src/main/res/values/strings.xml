@@ -14,9 +14,7 @@
     <string name="team_input">What is your quest?</string>
     <string name="join_bowler">Join the classy bowler hat spy society?</string>
     <string name="join_fedora">Join the trendy fedora hat spy coalition?</string>
-    <string name="menu_show_node_info_prompt">Show Node Info</string>
-    <string name="menu_hide_node_info_prompt">Hide Node Info</string>
-    <string name="menu_set_dev_mode_on_prompt">Turn Dev Mode ON</string>
-    <string name="menu_set_dev_mode_off_prompt">Turn Dev Mode OFF</string>
+    <string name="menu_toggle_node_info_prompt">Toggle Node Info</string>
+    <string name="menu_toggle_dev_mode_prompt">Toggle Dev Mode</string>
 
 </resources>
