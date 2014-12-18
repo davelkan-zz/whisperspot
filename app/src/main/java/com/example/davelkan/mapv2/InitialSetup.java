@@ -44,7 +44,7 @@ public class InitialSetup extends FragmentActivity {
         String userName = preferences.getString("username", null);
         String color = preferences.getString("color", null);
         if (userName != null && color != null) {
-            Intent intent = new Intent(this, MapsFragment.class);
+            Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra(USERNAME, userName);
             intent.putExtra(TEAM, color);
             Log.i(TAG, "Create user: " + userName);

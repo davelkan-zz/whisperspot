@@ -20,7 +20,7 @@ public final class BLEScanner implements PreferenceManager.OnActivityResultListe
     private String deviceName;
     private BluetoothDevice device = null;
     private BluetoothAdapter mBLEAdapter = null;
-    private MapsFragment activity;
+    private MainActivity activity;
     private static String TAG = "BLEScanner";
 
     private BluetoothAdapter.LeScanCallback mBLECallback = new BluetoothAdapter.LeScanCallback() {
@@ -35,7 +35,7 @@ public final class BLEScanner implements PreferenceManager.OnActivityResultListe
         }
     };
 
-    public BLEScanner(MapsFragment currentActivity) {
+    public BLEScanner(MainActivity currentActivity) {
         activity = currentActivity;
     }
 

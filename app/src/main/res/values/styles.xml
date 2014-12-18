@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Base application theme. -->
-    <style name="DefFont" parent="android:Theme.Holo.Light.DarkActionBar">
+    <style name="DefFont">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">#00FF00</item>
         <item name="android:typeface">monospace</item>
         <item name="android:paddingLeft">20dp</item>
     </style>
+
+    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar"/>
 
 </resources>

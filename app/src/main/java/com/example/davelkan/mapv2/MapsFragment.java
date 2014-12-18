@@ -1,9 +1,9 @@
 package com.example.davelkan.mapv2;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -13,57 +13,45 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v4.app.FragmentActivity;
+import android.support.annotation.Nullable;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import java.util.HashSet;
 
 import com.example.davelkan.mapv2.util.Node;
-import com.example.davelkan.mapv2.util.NodeInfoFragment;
-import com.example.davelkan.mapv2.util.NodeMap;
 import com.example.davelkan.mapv2.util.User;
-import com.firebase.client.Firebase;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.SupportMapFragment;
 
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.List;
 
-public class MapsFragment extends FragmentActivity {
-    private static String TAG = "MapsActivity";
+public class MapsFragment extends Fragment {
     private static LatLng OLIN = new LatLng(42.2929, -71.2615);
-    public static String APP_NAME = "Whisperspot";
-    private Menu menu;
+    public String APP_NAME = "Whisperspot";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private MapView mapView; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
-    private BLEScanner scanner;
-    private FirebaseUtils firebaseUtils;
-    private NodeMap nodes = new NodeMap(this);
-    private User user;
     private Node activeNode;
-    private Intel intel;
-    private Toast oldToast = null;
-    private SharedPreferences preferences;
-    private Set<String> visitedDevices;
-    private boolean devMode = false;
-    private boolean nodeInfo = false;
-    //private boolean dontZoom = true;
+
+    View rootView;
+    MainActivity mainActivity;
 
     Button leave_intel;
     Button take_intel;
@@ -79,31 +67,86 @@ public class MapsFragment extends FragmentActivity {
     int zoom = 17;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
-        Log.i("STARTUP", "====================================");
-        Firebase.setAndroidContext(this);
-        firebaseUtils = new FirebaseUtils(nodes);
-        initPreferences();
-        initUser();
-        initButtons();
+//        initButtons();
+        MapsInitializer.initialize(mainActivity);
         initMap();
     }
 
+    @Override
+    public void onResume() {
+        if (mapView != null) {
+            mapView.onResume();
+        }
+        super.onResume();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (mapView != null) {
+            mapView.onSaveInstanceState(outState);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onPause() {
+        if (mapView != null) {
+            mapView.onPause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onLowMemory() {
+        if (mapView != null) {
+            mapView.onLowMemory();
+        }
+        super.onLowMemory();
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mapView != null) { //Sometimes this is null returning to the app from intent
+            //Log.i(GoogleMapFragment.class.getSimpleName(), "mapView is not null on Destroy()");
+            mapView.onDestroy();
+        }
+        super.onDestroy();
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        scanner.onActivityResult(requestCode, resultCode, data);
+        mainActivity.scanner.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        initMap();
+    public void onAttach(Activity activity) {
+        mainActivity = (MainActivity) activity;
+        super.onAttach(activity);
     }
 
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        rootView = inflater.inflate(R.layout.fragment_maps, container, false);
 
+        // Do a null check to confirm that we have not already instantiated the map.
+        if (mMap == null) {
+            Log.i("DebugDebug", "debug");
+            mapView = (MapView) rootView.findViewById(R.id.map);
+            mapView.onCreate(savedInstanceState);
+            mMap = mapView.getMap();
 
+            // Check if we were successful in obtaining the map.
+            if (mMap != null) {
+                Log.i("DebugDebug", "chris");
+                initMap();
+                setUpMap();
+            }
+        }
+
+        return rootView;
+    }
 
     // APP-WIDE -- should go in main Activity?  So MapsActivity should be a fragment?
 
@@ -111,49 +154,9 @@ public class MapsFragment extends FragmentActivity {
 
 
 
-    //    Make sure toasts don't stack (cancel previous toast before creating new one)
-    public void toastify(String text) {
-//        if (oldToast != null) oldToast.cancel();
-        oldToast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
-        oldToast.show();
-    }
-
-    public void setDevMode(boolean newValue) {
-//        toastify("Dev mode set to " + (newValue?"ON":"OFF") + " from " + (devMode?"ON":"OFF"));
-        devMode = newValue;
-    }
-
-    public boolean getDevMode() {
-        return devMode;
-    }
-
-    private void initPreferences() {
-        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
-        visitedDevices = preferences.getStringSet("visitedNodes", new HashSet<String>());
-    }
-
-    private void initUser() {
-        Intent intent = getIntent();
-        String userName = intent.getStringExtra(InitialSetup.USERNAME);
-        String color = intent.getStringExtra(InitialSetup.TEAM);
-
-        Log.i(TAG, "Username: " + userName);
-        Log.i(TAG, "Team Color: " +  color);
-
-        user = new User(userName, color);
-        intel = new Intel(user);
-        firebaseUtils.retrieveUser(userName, user, preferences);
-    }
-
     // goes in fragment to switch fragments
     public void goToFragmentForNode(Node node) {
 //        ((MainActivity) getActivity()).switchFragment(new NodeInfoFragment());
-    }
-
-    // scans for a Bluetooth device
-    public void runScanner(String device) {
-        scanner = new BLEScanner(this);
-        scanner.scanBLE(device);
     }
 
 
@@ -179,24 +182,12 @@ public class MapsFragment extends FragmentActivity {
      * method in {@link #onResume()} to guarantee that it will be called.
      */
     private void initMap() {
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
 
         if (!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
             Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            Toast.makeText(this, "Please enable GPS for " + APP_NAME + " to work properly.", Toast.LENGTH_LONG).show();
+            mainActivity.toastify("Please enable GPS for " + APP_NAME + " to work properly.");
             startActivity(myIntent);
-            return;
-        }
-
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
         }
     }
 
@@ -207,14 +198,14 @@ public class MapsFragment extends FragmentActivity {
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        mMap.getUiSettings().setAllGesturesEnabled(true);
-        mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(this));
-
-        LocationListener locationListener = Listeners.getLocationListener(this);
+        this.mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        this.mMap.getUiSettings().setAllGesturesEnabled(true);
+        this.mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(mainActivity, this));
+        Log.i("DebugDebug", "hahaha");
+        LocationListener locationListener = Listeners.getLocationListener(mainActivity, this);
 
         // Get the location manager
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -248,7 +239,7 @@ public class MapsFragment extends FragmentActivity {
     }
 
     public void drawNode(Node node) {
-        if (mMap != null && visitedDevices.contains(node.getDevice())) {
+        if (mMap != null && mainActivity.visitedDevices.contains(node.getDevice())) {
             mMap.addCircle(new CircleOptions()
                     .center(node.getCenter())
                     .radius(25)
@@ -271,24 +262,24 @@ public class MapsFragment extends FragmentActivity {
 
     public void enterNewNode(Node foundNode) {
         zoomTo(foundNode, 19);
-        if (!visitedDevices.contains(foundNode.getDevice())) {
-            visitedDevices.add(foundNode.getDevice());
-            preferences.edit().remove("visitedNodes").apply();
-            preferences.edit().putStringSet("visitedNodes", visitedDevices).apply();
+        if (!mainActivity.visitedDevices.contains(foundNode.getDevice())) {
+            mainActivity.visitedDevices.add(foundNode.getDevice());
+            mainActivity.preferences.edit().remove("visitedNodes").apply();
+            mainActivity.preferences.edit().putStringSet("visitedNodes", mainActivity.visitedDevices).apply();
             drawNode(foundNode);
         }
-        toastify("entered " + foundNode.getName());
-        firebaseUtils.pullNode(nodes, foundNode);
+        mainActivity.toastify("entered " + foundNode.getName());
+        mainActivity.firebaseUtils.pullNode(mainActivity.nodes, foundNode);
     }
 
     //check to see if you're in a node
     public Node checkAllyProximity(LatLng latLng) {
-        return nodes.checkProximity(user.getColor(), latLng);
+        return mainActivity.nodes.checkProximity(mainActivity.user.getColor(), latLng);
     }
 
     //Check to see if you're in an enemy node
     public Node checkEnemyProximity(LatLng latLng) {
-        return nodes.checkProximity(user.getEnemyColor(), latLng);
+        return mainActivity.nodes.checkProximity(mainActivity.user.getEnemyColor(), latLng);
     }
 
 
@@ -297,44 +288,44 @@ public class MapsFragment extends FragmentActivity {
 
 
 
-    public void initButtons() {
-        leave_intel = (Button) findViewById(R.id.lvmsg);
-        take_intel = (Button) findViewById(R.id.tkmsg);
-        leave_trap = (Button) findViewById(R.id.lvtrp);
-        decrypt_intel = (Button) findViewById(R.id.dcptmsg);
-        pop_up = (TextView) findViewById(R.id.popUp);
-        node_selector = (Spinner) findViewById(R.id.node_selector);
-        about = (TextView) findViewById(R.id.about);
-        nodeStats = (TextView) findViewById(R.id.nodeStats);
-        ownerBar = (ProgressBar) findViewById(R.id.ownerBar);
-        ownerBar.setMax(100);
-        about.setText("Username: " + user.getName() + "\nFaction: " + user.getColor());
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        //TODO: Convert visited hashmap to Array usable by array adapter
-        if(visitedDevices == null) {
-            Log.i("pipe", "FUCK FUCK FUCK FUCK");
-        }
-        //TODO: identify node selected
-        //TODO: modify nodeStats Textview based on identified node
-        //TODO: show nodeStats TextView and zoom on selected node
-
-        take_intel.setOnClickListener(Listeners.gatherIntel(this));
-        leave_intel.setOnClickListener(Listeners.deliverIntel(this));
-        decrypt_intel.setOnClickListener(Listeners.decryptIntel(this));
-        pop_up.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                pop_up.setVisibility(View.INVISIBLE);
-            }
-        });
-    }
+//    public void initButtons() {
+//        leave_intel = (Button) rootView.findViewById(R.id.lvmsg);
+//        take_intel = (Button) rootView.findViewById(R.id.tkmsg);
+//        leave_trap = (Button) rootView.findViewById(R.id.lvtrp);
+//        decrypt_intel = (Button) rootView.findViewById(R.id.dcptmsg);
+//        pop_up = (TextView) rootView.findViewById(R.id.popUp);
+//        node_selector = (Spinner) rootView.findViewById(R.id.node_selector);
+//        about = (TextView) rootView.findViewById(R.id.about);
+//        nodeStats = (TextView) rootView.findViewById(R.id.nodeStats);
+//        ownerBar = (ProgressBar) rootView.findViewById(R.id.ownerBar);
+//        ownerBar.setMax(100);
+//        about.setText("Username: " + mainActivity.user.getName() + "\nFaction: " + mainActivity.user.getColor());
+//        // Create an ArrayAdapter using the string array and a default spinner layout
+//        //TODO: Convert visited hashmap to Array usable by array adapter
+//        if(mainActivity.visitedDevices == null) {
+//            Log.i("pipe", "FUCK FUCK FUCK FUCK");
+//        }
+//        //TODO: identify node selected
+//        //TODO: modify nodeStats Textview based on identified node
+//        //TODO: show nodeStats TextView and zoom on selected node
+//
+//        take_intel.setOnClickListener(Listeners.gatherIntel(this));
+//        leave_intel.setOnClickListener(Listeners.deliverIntel(this));
+//        decrypt_intel.setOnClickListener(Listeners.decryptIntel(this));
+//        pop_up.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                pop_up.setVisibility(View.INVISIBLE);
+//            }
+//        });
+//    }
 
     public void deliverIntel() {
-            popUp(intel.deliverIntel(activeNode, nodes));
-        if(intel.getNode() != activeNode) {
-            getFirebaseUtils().pushNode(activeNode);
-            getFirebaseUtils().pushUser(user);
-            toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " +
+        popUp(mainActivity.intel.deliverIntel(activeNode, mainActivity.nodes));
+        if (mainActivity.intel.getNode() != activeNode) {
+            mainActivity.getFirebaseUtils().pushNode(activeNode);
+            mainActivity.getFirebaseUtils().pushUser(mainActivity.user);
+            mainActivity.toastify("you: " + mainActivity.user.getPoints() + "; " + activeNode.getName() + ": " +
                     activeNode.getColor() + " " + activeNode.getOwnership());
         }
     }
@@ -349,20 +340,19 @@ public class MapsFragment extends FragmentActivity {
     }
 
     public void displayButtons() {
-        makeInvisible(); //Start from scratch, only enable buttons
-        if (mapState == 0) { //Not in a node, no buttons
-        } else if (mapState == 1) { //In an ally Node
-            leave_intel.setVisibility(View.VISIBLE);
-            take_intel.setVisibility(View.VISIBLE);
-        } else if (mapState == 2) { //In an enemy Node
-            leave_intel.setVisibility(View.VISIBLE);
-            decrypt_intel.setVisibility(View.VISIBLE);
-        } else if (mapState == 3) { //Just left intel, took intel, or attempted to decrypt
-        }
+//        makeInvisible(); //Start from scratch, only enable buttons
+//        if (mapState == 0) { //Not in a node, no buttons
+//        } else if (mapState == 1) { //In an ally Node
+//            leave_intel.setVisibility(View.VISIBLE);
+//            take_intel.setVisibility(View.VISIBLE);
+//        } else if (mapState == 2) { //In an enemy Node
+//            leave_intel.setVisibility(View.VISIBLE);
+//            decrypt_intel.setVisibility(View.VISIBLE);
+//        } else if (mapState == 3) { //Just left intel, took intel, or attempted to decrypt
+//        }
     }
 
     public void makeInvisible() {
-        leave_trap.setVisibility(View.INVISIBLE);
         decrypt_intel.setVisibility(View.INVISIBLE);
         leave_intel.setVisibility(View.INVISIBLE);
         take_intel.setVisibility(View.INVISIBLE);
@@ -374,100 +364,54 @@ public class MapsFragment extends FragmentActivity {
         pop_up.setVisibility(View.VISIBLE);
     }
 
-    private void setNodeInfo(boolean value) {
-        nodeInfo = value;
+    public void setNodeInfo(boolean value) {
+        mainActivity.nodeInfo = value;
         int visibility = (value)?View.VISIBLE:View.INVISIBLE;
-        about.setVisibility(visibility);
-        node_selector.setVisibility(visibility);
-        nodeStats.setVisibility(visibility);
-        ownerBar.setVisibility(visibility);
+//        about.setVisibility(visibility);
+//        node_selector.setVisibility(visibility);
+//        nodeStats.setVisibility(visibility);
+//        ownerBar.setVisibility(visibility);
         if (value) initNodeStates();
     }
 
 
 
-    // ACTION BAR -- Listeners should be moved to Listeners class, but how do we access all the visibility stuff?
-
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        this.menu = menu;
-        getMenuInflater().inflate(R.menu.my, menu);
-        return true;
-    }
-
-    private void hideOption(int id) {
-        MenuItem item = menu.findItem(id);
-        item.setVisible(false);
-    }
-
-    private void showOption(int id) {
-        MenuItem item = menu.findItem(id);
-        item.setVisible(true);
-    }
-
-    private void setOptionTitle(int id, String title) {
-        MenuItem item = menu.findItem(id);
-        item.setTitle(title);
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        switch (item.getItemId()) {
-            case R.id.menu_toggle_node_info:
-                setOptionTitle(R.id.menu_toggle_node_info, "Turn Node Info " + (nodeInfo?"ON":"OFF"));
-                setNodeInfo(!nodeInfo);
-                return true;
-            case R.id.menu_toggle_dev_mode:
-                setOptionTitle(R.id.menu_toggle_dev_mode, "Turn Dev Mode " + (devMode?"ON":"OFF"));
-                setDevMode(!devMode);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-
     //Initiates nodeStats window and calls function to populate it
     private void initNodeStates(){
-        ArrayList<String> visitedTitles = new ArrayList<>();
-        for(String id : visitedDevices){
-            visitedTitles.add(nodes.getNodeFromDevice(id).getName());
+        List<String> visitedTitles = new ArrayList<>();
+        for(String id : mainActivity.visitedDevices) {
+            visitedTitles.add(mainActivity.nodes.getNodeFromDevice(id).getName());
         }
-        ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,visitedTitles);
-        // Apply the adapter to the spinner(dropdown)
-        node_selector.setAdapter(adapter);
-        //used a listener to check if new item selected
-        node_selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedFromList = node_selector.getItemAtPosition(position).toString();
-                //Call the functions that actually populate the NodeStats Window
-                if(!showNodeStats(selectedFromList,"red")) {
-                    showNodeStats(selectedFromList, "blue");
-                }
-            }
-            //nodeStats.setText(selectedFromList);
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
 
-            }
-        });
+        ArrayAdapter adapter = new ArrayAdapter<> (mainActivity, android.R.layout.simple_spinner_item, visitedTitles);
+        // Apply the adapter to the spinner(dropdown)
+//        node_selector.setAdapter(adapter);
+        //used a listener to check if new item selected
+//        node_selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                String selectedFromList = node_selector.getItemAtPosition(position).toString();
+//                //Call the functions that actually populate the NodeStats Window
+//                if(!showNodeStats(selectedFromList,"red")) {
+//                    showNodeStats(selectedFromList, "blue");
+//                }
+//            }
+//            //nodeStats.setText(selectedFromList);
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//
+//            }
+//        });
     }
 
     //populates the nodeStats window to inform users about the nodes.
     private Boolean showNodeStats(String selectedFromList, String faction){
 
-        for (Node element : nodes.get(faction)) {
+        for (Node element : mainActivity.nodes.get(faction)) {
             if (selectedFromList.equals(element.getName())) {
                 LatLng elementCenter = element.getCenter();
                 zoomBelow(element);
+
                 if (faction.equalsIgnoreCase("blue")) {
                     faction = "Blue Fedoras";
                     ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
@@ -494,19 +438,15 @@ public class MapsFragment extends FragmentActivity {
     }
 
     public User getUser() {
-        return user;
+        return mainActivity.user;
     }
 
     public Intel getIntel() {
-        return intel;
+        return mainActivity.intel;
     }
 
     public Node getActiveNode() {
         return activeNode;
-    }
-
-    public FirebaseUtils getFirebaseUtils() {
-        return firebaseUtils;
     }
 
     public void setActiveNode(Node activeNode) {

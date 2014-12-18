@@ -12,23 +12,23 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class Listeners {
-    public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MapsFragment activity) {
+    public static GoogleMap.OnMapLongClickListener getOnMapLongClickListener(final MainActivity activity, final MapsFragment fragment) {
         return new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng point) {
                 if (point != null && activity.getDevMode()) {
-                    Listeners.onLocationUpdate(activity, point);
+                    Listeners.onLocationUpdate(fragment, point);
                 }
             }
         };
     }
 
-    public static LocationListener getLocationListener(final MapsFragment activity) {
+    public static LocationListener getLocationListener(final MainActivity activity, final MapsFragment fragment) {
         return new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 if (location != null && !activity.getDevMode()) {
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    Listeners.onLocationUpdate(activity, latLng);
+                    Listeners.onLocationUpdate(fragment, latLng);
                 }
             }
 
@@ -44,37 +44,37 @@ public class Listeners {
         };
     }
 
-    public static void onLocationUpdate(MapsFragment activity, LatLng latLng) {
-        Node activeNode = activity.getActiveNode();
+    public static void onLocationUpdate(MapsFragment fragment, LatLng latLng) {
+        Node activeNode = fragment.getActiveNode();
 
-        activity.updateMarker(latLng);
+        fragment.updateMarker(latLng);
 
-        Node foundNode = activity.checkAllyProximity(latLng);
+        Node foundNode = fragment.checkAllyProximity(latLng);
         if (foundNode == null) {
-            foundNode = activity.checkEnemyProximity(latLng);
+            foundNode = fragment.checkEnemyProximity(latLng);
         }
 
         if (activeNode != null && activeNode != foundNode) {
-            activity.toastify("left " + activeNode.getName());
-            activity.setMapState(0);
+            fragment.mainActivity.toastify("left " + activeNode.getName());
+            fragment.setMapState(0);
         }
         if (foundNode == null) { // didn't find a node
-            activity.setActiveNode(null);
+            fragment.setActiveNode(null);
             Log.i("LOCATION UPDATE", "NOT IN A NODE");
-            activity.setMapState(0);
+            fragment.setMapState(0);
         } else { // found a node
-            if (foundNode.getColor().equals(activity.getUser().getColor())) {
-                activity.setMapState(1);
+            if (foundNode.getColor().equals(fragment.getUser().getColor())) {
+                fragment.setMapState(1);
             } else {
-                activity.setMapState(2);
+                fragment.setMapState(2);
             }
-            if (!foundNode.equals(activity.getActiveNode())) {
-                activity.enterNewNode(foundNode);
+            if (!foundNode.equals(fragment.getActiveNode())) {
+                fragment.enterNewNode(foundNode);
             }
             Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
-            activity.setActiveNode(foundNode);
+            fragment.setActiveNode(foundNode);
         }
-        activity.displayButtons();
+        fragment.displayButtons();
     }
 
     public static View.OnClickListener gatherIntel(final MapsFragment activity) {
