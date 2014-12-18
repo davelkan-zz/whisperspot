@@ -250,6 +250,7 @@ public class MapsActivity extends FragmentActivity {
     private void setUpMap() {
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setAllGesturesEnabled(true);
+        mMap.setOnMapClickListener(Listeners.getOnMapClickListener(this));
         mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(this));
 
         LocationListener locationListener = Listeners.getLocationListener(this);
@@ -263,7 +264,7 @@ public class MapsActivity extends FragmentActivity {
         if (location != null) {
             locationListener.onLocationChanged(location);
             zoomTo(location, zoom);
-        } else { // this is just so it zooms in on Olin even if it finds nothing
+        } else { // this is just so it zooms in on Olin if phone doesn't know where it is
             zoomTo(olin, zoom);
         }
     }
@@ -284,10 +285,6 @@ public class MapsActivity extends FragmentActivity {
         zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
     }
 
-    private void zoomBelow(LatLng latLng) {
-        zoomTo(new LatLng(latLng.latitude - 0.00025, latLng.longitude), 19);
-    }
-
     public void drawNode(Node node) {
         if (mMap != null) {
             mMap.addCircle(new CircleOptions()
@@ -301,7 +298,7 @@ public class MapsActivity extends FragmentActivity {
 
 
     // LOCATION -- stays in this class, but maybe updateLocation should stay in its listener?
-    // If so, how should be access all the MapsActivity variables it uses?
+    // If so, how should we access all the MapsActivity variables it uses?
 
 
 
@@ -358,16 +355,27 @@ public class MapsActivity extends FragmentActivity {
     }
 
     private Node checkProximity(List<Node> nodes, LatLng latLng) {
-        if (nodes == null) {
-            return null;
-        }
-        if (latLng == null) {
+        if (nodes == null || latLng == null) {
             return null;
         }
         for (Node activeNode : nodes) {
             if (activeNode.getDistance(latLng) < 25) {
                 System.out.print("in Range");
                 return activeNode;
+            }
+        }
+        return null;
+    }
+
+    public Node getNodeFromLatLng(LatLng point) {
+        if (nodes == null || point == null) {
+            return null;
+        }
+        for (List<Node> nodeList : nodes.values()) {
+            for (Node node : nodeList) {
+                if (node.getDistance(point) < 25) {
+                    return node;
+                }
             }
         }
         return null;
@@ -573,10 +581,9 @@ public class MapsActivity extends FragmentActivity {
 
     }
     private Boolean showNodeStats(String selectedFromList, String faction){
-        for (Node element : nodes.get(faction)) {
-            if (selectedFromList.equals(element.getDevice())) {
-                LatLng elementCenter = element.getCenter();
-                zoomBelow(elementCenter);
+        for (Node node : nodes.get(faction)) {
+            if (selectedFromList.equals(node.getDevice())) {
+                zoomBelow(node);
                 if (faction.equalsIgnoreCase("blue")) {
                     faction = "Blue Fedoras";
                     ownerBar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
@@ -591,8 +598,8 @@ public class MapsActivity extends FragmentActivity {
                         ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.RED));
                     }
                 }
-                nodeStats.setText("\n \n \n" + elementCenter.toString() + "\n" + "Controlling Faction: " + faction + " \n \n Controlling Influence: ");
-                int percentage = (element.getOwnership());
+                nodeStats.setText("\n \n \n" + node.getCenter().toString() + "\n" + "Controlling Faction: " + faction + " \n \n Controlling Influence: ");
+                int percentage = (node.getOwnership());
                 ownerBar.setProgress(percentage);
                 return true;
             }
