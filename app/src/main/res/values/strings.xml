@@ -16,6 +16,6 @@
     <string name="join_fedora">Join the trendy fedora hat spy coalition?</string>
     <string name="menu_toggle_node_info_prompt">Toggle Node Info</string>
     <string name="menu_toggle_dev_mode_prompt">Toggle Dev Mode</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_main">MainActivity</string>
 
 </resources>

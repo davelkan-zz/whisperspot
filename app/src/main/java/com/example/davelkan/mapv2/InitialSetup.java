@@ -4,18 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.content.SharedPreferences;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -50,7 +44,7 @@ public class InitialSetup extends FragmentActivity {
         String userName = preferences.getString("username", null);
         String color = preferences.getString("color", null);
         if (userName != null && color != null) {
-            Intent intent = new Intent(this, MapsActivity.class);
+            Intent intent = new Intent(this, MapsFragment.class);
             intent.putExtra(USERNAME, userName);
             intent.putExtra(TEAM, color);
             Log.i(TAG, "Create user: " + userName);
@@ -69,7 +63,7 @@ public class InitialSetup extends FragmentActivity {
     public void joinTeam(View view, String color) {
         String userName = checkUserName();
         if (!userName.equals("")) {
-            Intent intent = new Intent(this, MapsActivity.class);
+            Intent intent = new Intent(this, MapsFragment.class);
             intent.putExtra(USERNAME, userName);
             intent.putExtra(TEAM, color);
 

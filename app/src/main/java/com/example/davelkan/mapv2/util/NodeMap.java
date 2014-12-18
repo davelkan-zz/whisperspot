@@ -1,21 +1,20 @@
 package com.example.davelkan.mapv2.util;
 
-import com.example.davelkan.mapv2.MapsActivity;
+import com.example.davelkan.mapv2.MapsFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by mwismer on 12/17/14.
  */
 public class NodeMap {
     private HashMap<String, List<Node>> nodeMap;
-    private MapsActivity activity;
+    private MapsFragment activity;
 
-    public NodeMap(MapsActivity activity) {
+    public NodeMap(MapsFragment activity) {
         this.activity = activity;
         this.nodeMap = new HashMap<>();
     }
