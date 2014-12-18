@@ -2,7 +2,12 @@ package com.example.davelkan.mapv2;
 
 import android.content.SharedPreferences;
 import android.util.Log;
-import android.widget.TextView;
+
+import com.example.davelkan.mapv2.util.Node;
+import com.example.davelkan.mapv2.util.Owner;
+import com.example.davelkan.mapv2.util.RawNode;
+import com.example.davelkan.mapv2.util.RawUser;
+import com.example.davelkan.mapv2.util.User;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -12,8 +17,6 @@ import com.google.android.gms.maps.model.LatLng;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;

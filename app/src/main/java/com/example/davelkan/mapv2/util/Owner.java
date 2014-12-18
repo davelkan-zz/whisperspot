@@ -1,4 +1,4 @@
-package com.example.davelkan.mapv2;
+package com.example.davelkan.mapv2.util;
 
 public class Owner {
     private String userName;

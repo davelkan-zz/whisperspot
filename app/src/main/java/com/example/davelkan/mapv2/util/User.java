@@ -1,6 +1,4 @@
-package com.example.davelkan.mapv2;
-
-import android.util.Log;
+package com.example.davelkan.mapv2.util;
 
 /**
  * Created by mwismer on 12/16/14.

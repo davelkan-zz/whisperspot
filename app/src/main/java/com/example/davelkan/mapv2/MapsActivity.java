@@ -26,10 +26,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashSet;
-import java.util.Random;
 
+import com.example.davelkan.mapv2.util.Node;
+import com.example.davelkan.mapv2.util.RawNode;
+import com.example.davelkan.mapv2.util.User;
 import com.firebase.client.Firebase;
-import com.firebase.client.collection.LLRBNode;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -55,12 +56,13 @@ public class MapsActivity extends FragmentActivity {
     private HashMap<String, List<Node>> nodes = new HashMap<>();
     private User user;
     private Node activeNode;
-    private Node intel = null;
+    private Intel intel = new Intel();
     private Toast oldToast = null;
     private LatLng olin = new LatLng(42.2929, -71.2615);
     private SharedPreferences preferences;
     private Set<String> visitedDevices;
     private boolean devMode = false;
+    private boolean nodeInfo = false;
     //private boolean dontZoom = true;
 
     Button leave_intel;
@@ -100,28 +102,17 @@ public class MapsActivity extends FragmentActivity {
         initMap();
     }
 
-    private void initPreferences() {
-        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
-        visitedDevices = preferences.getStringSet("visitedNodes", new HashSet<String>());
-    }
-
-    private void initUser() {
-        Intent intent = getIntent();
-        String userName = intent.getStringExtra(InitialSetup.USERNAME);
-        String color = intent.getStringExtra(InitialSetup.TEAM);
-
-        Log.i(TAG, "Username: " + userName);
-        Log.i(TAG, "Team Color: " +  color);
-
-        user = new User(userName, color);
-        firebaseUtils.retrieveUser(userName, user, preferences);
-    }
-
     // scans for a Bluetooth device
     public void runScanner(String device) {
         scanner = new BLEScanner(this);
         scanner.scanBLE(device);
     }
+
+
+
+    // NODE MANAGEMENT -- Do we need a nodeHandler thing?  Where SHOULD be store nodes (list of all node information)
+
+
 
     // adds a node to list of nodes and draws on map
     public void addNode(Node node) {
@@ -134,16 +125,6 @@ public class MapsActivity extends FragmentActivity {
             drawNode(node);
         }
         initButtons();
-    }
-
-    public void drawNode(Node node) {
-        if (mMap != null) {
-            mMap.addCircle(new CircleOptions()
-                    .center(node.getCenter())
-                    .radius(25)
-                    .strokeColor(node.getAllyColor())
-                    .fillColor(Color.TRANSPARENT));
-        }
     }
 
     // updates a node's information with new data
@@ -162,6 +143,22 @@ public class MapsActivity extends FragmentActivity {
         nodes.get(newColor).add(node);
         // TODO: reflect color change on map
     }
+
+    private Node getNodeFromDevice(String device) {
+        for (List<Node> nodeList : nodes.values()) {
+            for (Node node : nodeList) {
+                if (device.equals(node.getDevice())) return node;
+            }
+        }
+        return null;
+    }
+
+
+
+    // APP-WIDE -- should go in main Activity?  So MapsActivity should be a fragment?
+
+
+
 
     public FirebaseUtils getFirebaseUtils() {
         return firebaseUtils;
@@ -182,6 +179,29 @@ public class MapsActivity extends FragmentActivity {
     public boolean getDevMode() {
         return devMode;
     }
+
+    private void initPreferences() {
+        preferences = getSharedPreferences("whisperspot", Context.MODE_PRIVATE);
+        visitedDevices = preferences.getStringSet("visitedNodes", new HashSet<String>());
+    }
+
+    private void initUser() {
+        Intent intent = getIntent();
+        String userName = intent.getStringExtra(InitialSetup.USERNAME);
+        String color = intent.getStringExtra(InitialSetup.TEAM);
+
+        Log.i(TAG, "Username: " + userName);
+        Log.i(TAG, "Team Color: " +  color);
+
+        user = new User(userName, color);
+        firebaseUtils.retrieveUser(userName, user, preferences);
+    }
+
+
+
+    // MAP -- Stays in this class, and should be some of the only stuff here
+
+
 
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
@@ -247,6 +267,23 @@ public class MapsActivity extends FragmentActivity {
             zoomTo(olin, zoom);
         }
     }
+
+    public void drawNode(Node node) {
+        if (mMap != null) {
+            mMap.addCircle(new CircleOptions()
+                    .center(node.getCenter())
+                    .radius(25)
+                    .strokeColor(node.getAllyColor())
+                    .fillColor(Color.TRANSPARENT));
+        }
+    }
+
+
+
+    // LOCATION -- stays in this class, but maybe updateLocation should stay in its listener?
+    // If so, how should be access all the MapsActivity variables it uses?
+
+
 
     public void updateLocation(LatLng latLng) {
         if (myLocation != null) {
@@ -343,6 +380,12 @@ public class MapsActivity extends FragmentActivity {
         return null;
     }
 
+
+
+    // BUTTON INTERFACE -- should all be in another fragment (putting buttons on top of map == bad)
+
+
+
     public void initButtons() {
         leave_intel = (Button) findViewById(R.id.lvmsg);
         take_intel = (Button) findViewById(R.id.tkmsg);
@@ -386,7 +429,7 @@ public class MapsActivity extends FragmentActivity {
            public void onClick(View v) {
                mapState = 3;
                displayButtons(mapState);
-               gatherIntel();
+               popUp(intel.gatherIntel(activeNode, user));
            }
        });
         decrypt_intel.setOnClickListener(new View.OnClickListener() {
@@ -394,7 +437,7 @@ public class MapsActivity extends FragmentActivity {
             public void onClick(View v) {
                 mapState = 4;
                 displayButtons(mapState);
-                decryptIntel();
+                popUp(intel.decryptIntel(activeNode, user));
             }
         });
         leave_trap.setOnClickListener(new View.OnClickListener() {
@@ -410,6 +453,19 @@ public class MapsActivity extends FragmentActivity {
             }
         });
     }
+
+    private void returnIntel() {
+        popUp(intel.returnIntel(activeNode, user, this));
+        getFirebaseUtils().pushNode(activeNode);
+        getFirebaseUtils().pushUser(user);
+        toastify("you: " + user.getPoints() + "; " + activeNode.getName() + ": " + activeNode.getColor() + " " + activeNode.getOwnership());
+    }
+
+
+
+    // DISPLAY -- should also be in button/node info display fragment
+
+
 
     private void displayButtons(int state) {
         makeInvisible(); //Start from scratch, only enable buttons
@@ -437,88 +493,27 @@ public class MapsActivity extends FragmentActivity {
         pop_up.setVisibility(View.VISIBLE);
     }
 
-    private void gatherIntel() { // gathering intel at allied node... checking node color may be unnecessary
-        if (activeNode == null) {
-            popUp("Return to the node to gather intel!");
-        } else if (activeNode.getColor().equalsIgnoreCase(user.getColor())) {
-            if (intel == null) {
-                popUp("Intel Gathered!  Deliver it to another WhisperSpot!");
-                //TODO: Fanciness - add fancy fake number generator
-                intel = activeNode;
-            } else {
-                popUp("You may only carry 1 intel at a time.");
-            }
-        } else {
-            popUp("This is enemy territory! You have to decrypt intel here!");
-        }
-    }
-
-    //decrypt intel at enemy node
-    private void decryptIntel() {
-        if (activeNode == null) {
-            popUp("Return to the node to decrypt intel!");
-        } else if (activeNode.getColor().equalsIgnoreCase(user.getEnemyColor())) {
-            if (intel == null && decryptCounter()) {
-                Random rand = new Random();
-                int odds = rand.nextInt(100);
-                int ownership = activeNode.getOwnership();
-                if (odds > ownership - 5) {
-                    intel = activeNode;
-                    popUp("Intel Decrypted!  Deliver it to another WhisperSpot!");
-                } else {
-                    popUp("Your cover was blown while decrypting message! You need to lay low for a bit!");
-                }
-            } else if (!decryptCounter()) {
-                popUp("Your cover is blown here! You need to lay low for a bit!");
-            } else if (intel != null) {
-                popUp("You may only carry 1 intel at a time.");
-            }
-        } else {
-            popUp("You don't need to decrypt intel at allied WhisperSpots");
-        }
-    }
-
-    private void returnIntel() {
-        if (intel == null) {
-            popUp("You poor ignorant fool. You have no Intel to offer.");
-        } else if (activeNode == null) {
-            popUp("Return to the node to return intel!");
-        } else {
-            int distance = (int) intel.getDistance(activeNode.getCenter());
-
-            int influence = 5 + distance / 200;
-            activeNode.captureByPoints(user, influence, this);
-            intel = null;
-            popUp("Nice Work Agent! You gained " + influence + " Influence over this WhisperSpot");
-        }
+    private void setNodeInfo(boolean value) {
+        nodeInfo = value;
+        int visibility = (value)?View.VISIBLE:View.INVISIBLE;
+        about.setVisibility(visibility);
+        node_selector.setVisibility(visibility);
+        nodeStats.setVisibility(visibility);
+        ownerBar.setVisibility(visibility);
+        if (value) initNodeStates();
     }
 
 
-    private boolean decryptCounter() {  //counter to stop users trying to decrypt too frequently
-        return true;
-    }
 
-    private Node getNodeFromDevice(String device) {
-        for (List<Node> nodeList : nodes.values()) {
-            for (Node node : nodeList) {
-                if (device.equals(node.getDevice())) return node;
-            }
-        }
-        return null;
-    }
+    // ACTION BAR -- Listeners should be moved to Listeners class, but how do we access all the visibility stuff?
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         this.menu = menu;
         getMenuInflater().inflate(R.menu.my, menu);
-
-        hideOption(R.id.menu_hide_node_info);
-        if (devMode) {
-            hideOption(R.id.menu_set_dev_mode_on);
-        } else {
-            hideOption(R.id.menu_set_dev_mode_off);
-        }
         return true;
     }
 
@@ -544,37 +539,19 @@ public class MapsActivity extends FragmentActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-            case R.id.menu_show_node_info:
-                showOption(R.id.menu_hide_node_info);
-                hideOption(R.id.menu_show_node_info);
-                about.setVisibility(View.VISIBLE);
-                node_selector.setVisibility(View.VISIBLE);
-                nodeStats.setVisibility(View.VISIBLE);
-                ownerBar.setVisibility(View.VISIBLE);
-                initNodeStates();
+            case R.id.menu_toggle_node_info:
+                setOptionTitle(R.id.menu_toggle_node_info, "Turn Node Info " + (nodeInfo?"ON":"OFF"));
+                setNodeInfo(!nodeInfo);
                 return true;
-            case R.id.menu_hide_node_info:
-                showOption(R.id.menu_show_node_info);
-                hideOption(R.id.menu_hide_node_info);
-                about.setVisibility(View.INVISIBLE);
-                node_selector.setVisibility(View.INVISIBLE);
-                nodeStats.setVisibility(View.INVISIBLE);
-                ownerBar.setVisibility(View.INVISIBLE);
-                return true;
-            case R.id.menu_set_dev_mode_on:
-                showOption(R.id.menu_set_dev_mode_off);
-                hideOption(R.id.menu_set_dev_mode_on);
-                setDevMode(true);
-                return true;
-            case R.id.menu_set_dev_mode_off:
-                showOption(R.id.menu_set_dev_mode_on);
-                hideOption(R.id.menu_set_dev_mode_off);
-                setDevMode(false);
+            case R.id.menu_toggle_dev_mode:
+                setOptionTitle(R.id.menu_toggle_dev_mode, "Turn Dev Mode " + (devMode?"ON":"OFF"));
+                setDevMode(!devMode);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
 
     //Initiates nodeStats window and calls function to populate it
     private void initNodeStates(){
@@ -605,7 +582,7 @@ public class MapsActivity extends FragmentActivity {
             if (selectedFromList.equals(element.getDevice())) {
                 LatLng elementCenter = element.getCenter();
                 zoomBelow(elementCenter);
-                if (faction == "blue") {
+                if (faction.equalsIgnoreCase("blue")) {
                     faction = "Blue Fedoras";
                     ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
                     //the following attribute is lollipop-only.  Only enable if user is using 21 or later
@@ -613,7 +590,7 @@ public class MapsActivity extends FragmentActivity {
                         ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.RED));
                     }
 
-                } else if (faction == "red") {
+                } else if (faction.equalsIgnoreCase("red")) {
                     faction = "Red Bowlers";
                     ownerBar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
                     //the following attribute is lollipop-only.  Only enable if user is using 21 or later
