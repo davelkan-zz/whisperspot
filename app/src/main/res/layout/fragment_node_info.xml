@@ -1,66 +1,127 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+<com.sothree.slidinguppanel.SlidingUpPanelLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:sothree="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sliding_panel_layout"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.davelkan.mapv2.util.NodeInfoFragment">
+    android:gravity="bottom"
+    sothree:panelHeight="20dp"
+    sothree:shadowHeight="4dp"
+    tools:context=".MapActivity">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Gather Intel"
-        android:id="@+id/gather_intel_button"
-        android:visibility="invisible"
-        android:layout_gravity="left|top" />
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Decrypt Message"
-        android:id="@+id/decrypt_intel_button"
-        android:visibility="invisible"
-        android:layout_gravity="left|top" />
+        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".MapsActivity" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Deliver Intel"
-        android:id="@+id/deliver_intel_button"
-        android:visibility="invisible"
-        android:layout_gravity="center_horizontal|top" />
 
-    <TextView
-        android:layout_width="140dp"
-        android:layout_height="64dp"
-        android:text=""
-        android:id="@+id/about"
-        android:visibility="invisible"
-        android:layout_gravity="right|top" />
+        <!--<Button-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="Deliver Intel"-->
+        <!--android:id="@+id/lvmsg"-->
+        <!--android:visibility="invisible"-->
+        <!--android:layout_gravity="center_horizontal|top" />-->
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="218dp"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Medium Text"
-        android:id="@+id/nodeStats"
-        android:visibility="invisible"
-        android:background="@color/material_blue_grey_800"
-        android:layout_gravity="left|bottom" />
+        <TextView
+            android:id="@+id/about"
+            android:layout_width="140dp"
+            android:layout_height="64dp"
+            android:layout_gravity="right|top"
+            android:text=""
+            android:visibility="invisible" />
 
-    <ProgressBar
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:id="@+id/ownerBar"
-        android:layout_gravity="center_horizontal|bottom"
-        android:visibility="invisible"
-        android:layout_marginBottom="10dp" />
+        <TextView
+            android:id="@+id/popUp"
+            android:layout_width="252dp"
+            android:layout_height="180dp"
+            android:layout_gravity="center"
+            android:background="@color/wallet_holo_blue_light"
+            android:text=""
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:visibility="invisible" />
 
-    <Spinner
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:id="@+id/node_selector"
-        android:layout_gravity="center"
-        android:textAlignment="center"
-        android:visibility="invisible"
-        android:layout_marginTop="70dp" />
+        <TextView
+            android:id="@+id/nodeStats"
+            android:layout_width="match_parent"
+            android:layout_height="218dp"
+            android:layout_gravity="left|bottom"
+            android:background="@color/material_blue_grey_800"
+            android:text="Medium Text"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:visibility="invisible" />
 
-</FrameLayout>
+        <ProgressBar
+            android:id="@+id/ownerBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="10dp"
+            android:visibility="invisible" />
+
+        <Spinner
+            android:id="@+id/node_selector"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="70dp"
+            android:textAlignment="center"
+            android:visibility="invisible" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/sliding_up_panel"
+        android:layout_width="fill_parent"
+        android:layout_height="200dp"
+        android:background="@color/red">
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/center_anchor"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_centerInParent="true" />
+
+            <Button
+                android:id="@+id/leave_trap"
+                style="@style/ButtonFont"
+                android:text="@string/leave_trap" />
+
+            <Button
+                android:id="@+id/deliver_intel_button"
+                style="@style/ButtonFont"
+                android:layout_alignParentLeft="true"
+
+                android:layout_toLeftOf="@id/center_anchor"
+                android:text="@string/deliver_intel" />
+
+            <Button
+                android:id="@+id/gather_intel_button"
+                style="@style/ButtonFont"
+                android:layout_alignParentRight="true"
+                android:layout_toRightOf="@id/center_anchor"
+                android:text="@string/gather_intel" />
+
+            <Button
+                android:id="@+id/decrypt_intel_button"
+                style="@style/ButtonFont"
+                android:layout_alignParentRight="true"
+                android:layout_toRightOf="@id/center_anchor"
+                android:text="@string/decrypt_message" />
+
+        </RelativeLayout>
+    </LinearLayout>
+
+</com.sothree.slidinguppanel.SlidingUpPanelLayout>

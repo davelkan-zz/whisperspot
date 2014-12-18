@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color
-        name="blue"
-        >#ff0046ff</color>
-    <color
-        name="red"
-        >#f00</color>
+    <color name="app_background">#222222</color>
+    <color name="blue">#ff0046ff</color>
+    <color name="red">#f00</color>
 </resources>

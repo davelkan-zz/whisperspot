@@ -31,12 +31,11 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.SupportMapFragment;
-
-import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +50,11 @@ public class MapsFragment extends Fragment {
 
     View rootView;
     MainActivity mainActivity;
+    SlidingUpPanelLayout layout;
+    View slidingView;
 
     Button leave_intel;
+    Button leave_trap;
     Button take_intel;
     Button decrypt_intel;
     TextView pop_up;
@@ -112,6 +114,7 @@ public class MapsFragment extends Fragment {
         }
         super.onDestroy();
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         mainActivity.scanner.onActivityResult(requestCode, resultCode, data);
@@ -127,17 +130,20 @@ public class MapsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_maps, container, false);
+        initButtons(rootView);
+        layout = (SlidingUpPanelLayout) rootView.findViewById(R.id.sliding_panel_layout);
+        layout.hidePanel();
+        slidingView = rootView.findViewById(R.id.sliding_up_panel);
+
 
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
-            Log.i("DebugDebug", "debug");
             mapView = (MapView) rootView.findViewById(R.id.map);
             mapView.onCreate(savedInstanceState);
             mMap = mapView.getMap();
 
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
-                Log.i("DebugDebug", "chris");
                 initMap();
                 setUpMap();
             }
@@ -188,7 +194,6 @@ public class MapsFragment extends Fragment {
         this.mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         this.mMap.getUiSettings().setAllGesturesEnabled(true);
         this.mMap.setOnMapLongClickListener(Listeners.getOnMapLongClickListener(mainActivity, this));
-        Log.i("DebugDebug", "hahaha");
         LocationListener locationListener = Listeners.getLocationListener(mainActivity, this);
 
         // Get the location manager
@@ -236,7 +241,6 @@ public class MapsFragment extends Fragment {
     }
 
 
-
     // LOCATION -- stays in this class, but maybe updateLocation should stay in its listener?
     // If so, how should we access all the MapsActivity variables it uses?
 
@@ -260,38 +264,74 @@ public class MapsFragment extends Fragment {
     }
 
 
+    // BUTTON INTERFACE -- should all be in another fragment (putting buttons on top of map == bad)
+    public void initButtons(View view) {
+        leave_intel = (Button) view.findViewById(R.id.lvmsg);
+        take_intel = (Button) view.findViewById(R.id.tkmsg);
+        leave_trap = (Button) view.findViewById(R.id.lvtrp);
+        decrypt_intel = (Button) view.findViewById(R.id.dcptmsg);
+        pop_up = (TextView) view.findViewById(R.id.popUp);
+        node_selector = (Spinner) view.findViewById(R.id.node_selector);
+        about = (TextView) view.findViewById(R.id.about);
+        nodeStats = (TextView) view.findViewById(R.id.nodeStats);
+        ownerBar = (ProgressBar) view.findViewById(R.id.ownerBar);
+        ownerBar.setMax(100);
+        about.setText("Username: " + mainActivity.user.getName() + "\nFaction: " + mainActivity.user.getColor());
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        //TODO: Convert visited hashmap to Array usable by array adapter
+        if(mainActivity.visitedDevices == null) {
+            Log.i("pipe", "FUCK FUCK FUCK FUCK");
+        }
+        //TODO: identify node selected
+        //TODO: modify nodeStats Textview based on identified node
+        //TODO: show nodeStats TextView and zoom on selected node
+/*
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectedFromList = node_selector.getItemAtPosition(position).toString();
+                nodeStats.setText(selectedFromList);
+                //TODO: identify node selected
+                //TODO: modify nodeStats Textview based on identified node
+                //TODO: show nodeStats TextView and zoom on selected node
+            }
+        });*/
+        leave_intel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mapState = 3;
+                displayButtons();
+                returnIntel();
+            }
+        });
+        take_intel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mapState = 3;
+                displayButtons();
+                popUp(mainActivity.intel.gatherIntel(activeNode));
+            }
+        });
+        decrypt_intel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mapState = 4;
+                displayButtons();
+                popUp(mainActivity.intel.decryptIntel(activeNode));
+            }
+        });
+        leave_trap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-//    public void initButtons() {
-//        leave_intel = (Button) rootView.findViewById(R.id.lvmsg);
-//        take_intel = (Button) rootView.findViewById(R.id.tkmsg);
-//        leave_trap = (Button) rootView.findViewById(R.id.lvtrp);
-//        decrypt_intel = (Button) rootView.findViewById(R.id.dcptmsg);
-//        pop_up = (TextView) rootView.findViewById(R.id.popUp);
-//        node_selector = (Spinner) rootView.findViewById(R.id.node_selector);
-//        about = (TextView) rootView.findViewById(R.id.about);
-//        nodeStats = (TextView) rootView.findViewById(R.id.nodeStats);
-//        ownerBar = (ProgressBar) rootView.findViewById(R.id.ownerBar);
-//        ownerBar.setMax(100);
-//        about.setText("Username: " + mainActivity.user.getName() + "\nFaction: " + mainActivity.user.getColor());
-//        // Create an ArrayAdapter using the string array and a default spinner layout
-//        //TODO: Convert visited hashmap to Array usable by array adapter
-//        if(mainActivity.visitedDevices == null) {
-//            Log.i("pipe", "FUCK FUCK FUCK FUCK");
-//        }
-//        //TODO: identify node selected
-//        //TODO: modify nodeStats Textview based on identified node
-//        //TODO: show nodeStats TextView and zoom on selected node
-//
-//        take_intel.setOnClickListener(Listeners.gatherIntel(this));
-//        leave_intel.setOnClickListener(Listeners.deliverIntel(this));
-//        decrypt_intel.setOnClickListener(Listeners.decryptIntel(this));
-//        pop_up.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                pop_up.setVisibility(View.INVISIBLE);
-//            }
-//        });
-//    }
+            }
+        });
+        pop_up.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pop_up.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
 
     public void deliverIntel() {
         popUp(mainActivity.intel.deliverIntel(activeNode, mainActivity.nodes));
@@ -304,25 +344,37 @@ public class MapsFragment extends Fragment {
     }
 
 
-
     // DISPLAY -- should also be in button/node info display fragment
 
 
     public void setMapState(int state) {
         mapState = state;
+        displayButtons();
     }
 
+
     public void displayButtons() {
-//        makeInvisible(); //Start from scratch, only enable buttons
-//        if (mapState == 0) { //Not in a node, no buttons
-//        } else if (mapState == 1) { //In an ally Node
-//            leave_intel.setVisibility(View.VISIBLE);
-//            take_intel.setVisibility(View.VISIBLE);
-//        } else if (mapState == 2) { //In an enemy Node
-//            leave_intel.setVisibility(View.VISIBLE);
-//            decrypt_intel.setVisibility(View.VISIBLE);
-//        } else if (mapState == 3) { //Just left intel, took intel, or attempted to decrypt
-//        }
+        makeInvisible(); //Start from scratch, only enable buttons
+        boolean isBlue = mainActivity.preferences.getString("color", "blue").equals("blue");
+
+        switch (mapState) {
+            case 1: // In Ally match color of node
+                leave_intel.setVisibility(View.VISIBLE);
+                take_intel.setVisibility(View.VISIBLE);
+                decrypt_intel.setVisibility(View.GONE);
+                slidingView.setBackgroundResource(isBlue ? R.color.blue : R.color.red);
+                layout.showPanel();
+                break;
+            case 2: // In Enemy
+                leave_intel.setVisibility(View.VISIBLE);
+                decrypt_intel.setVisibility(View.VISIBLE);
+                take_intel.setVisibility(View.GONE);
+                slidingView.setBackgroundResource(isBlue ? R.color.red : R.color.blue);
+                layout.showPanel();
+                break;
+            default:
+                break;
+        }
     }
 
     public void makeInvisible() {
@@ -339,7 +391,7 @@ public class MapsFragment extends Fragment {
 
     public void setNodeInfo(boolean value) {
         mainActivity.nodeInfo = value;
-        int visibility = (value)?View.VISIBLE:View.INVISIBLE;
+        int visibility = (value) ? View.VISIBLE : View.INVISIBLE;
 //        about.setVisibility(visibility);
 //        node_selector.setVisibility(visibility);
 //        nodeStats.setVisibility(visibility);
@@ -348,15 +400,14 @@ public class MapsFragment extends Fragment {
     }
 
 
-
     //Initiates nodeStats window and calls function to populate it
-    private void initNodeStates(){
+    private void initNodeStates() {
         List<String> visitedTitles = new ArrayList<>();
-        for(String id : mainActivity.visitedDevices) {
+        for (String id : mainActivity.visitedDevices) {
             visitedTitles.add(mainActivity.nodes.getNodeFromDevice(id).getName());
         }
 
-        ArrayAdapter adapter = new ArrayAdapter<> (mainActivity, android.R.layout.simple_spinner_item, visitedTitles);
+        ArrayAdapter adapter = new ArrayAdapter<>(mainActivity, android.R.layout.simple_spinner_item, visitedTitles);
         // Apply the adapter to the spinner(dropdown)
 //        node_selector.setAdapter(adapter);
         //used a listener to check if new item selected
@@ -378,7 +429,7 @@ public class MapsFragment extends Fragment {
     }
 
     //populates the nodeStats window to inform users about the nodes.
-    private Boolean showNodeStats(String selectedFromList, String faction){
+    private Boolean showNodeStats(String selectedFromList, String faction) {
 
         for (Node element : mainActivity.nodes.get(faction)) {
             if (selectedFromList.equals(element.getName())) {
@@ -409,6 +460,14 @@ public class MapsFragment extends Fragment {
         }
         return false;
     }
+
+    private void returnIntel() {
+        popUp(mainActivity.intel.deliverIntel(activeNode, mainActivity.nodes));
+        mainActivity.getFirebaseUtils().pushNode(activeNode);
+        mainActivity.getFirebaseUtils().pushUser(mainActivity.user);
+        mainActivity.toastify("you: " + mainActivity.user.getPoints() + "; " + activeNode.getName() + ": " + activeNode.getColor() + " " + activeNode.getOwnership());
+    }
+
 
     public User getUser() {
         return mainActivity.user;
