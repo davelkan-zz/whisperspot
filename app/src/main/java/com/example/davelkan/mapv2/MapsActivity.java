@@ -291,23 +291,27 @@ public class MapsActivity extends FragmentActivity {
         displayButtons(mapState);
     }
 
-
-
+    //helper function to zoom to a specific location at a specific zoom using LatLng
     private void zoomTo(LatLng latLng, int zoom) {
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
     }
 
+    //helper function to zoom to a specific location at a specific zoom using our Node class
     private void zoomTo(Node node, int zoom) {
         zoomTo(node.getCenter(), zoom);
     }
 
+    //helper function to zoom to a specific location at a specific zoom using our Location
     private void zoomTo(Location location, int zoom) {
         zoomTo(new LatLng(location.getLatitude(), location.getLongitude()), zoom);
     }
 
+    //Zooms to and slightly below a node using Node class - used to put the node in frame while viewing nodeStats
     private void zoomBelow(Node node) {
         zoomTo(new LatLng(node.getLat() - 0.00025, node.getLon()), 19);
     }
+
+    //Zooms to and slightly below a node using LatLng - used to put the node in frame while viewing nodeStats
     private void zoomBelow(LatLng latLng) {
         zoomTo(new LatLng(latLng.latitude - 0.00025, latLng.longitude), 19);
     }
@@ -317,10 +321,12 @@ public class MapsActivity extends FragmentActivity {
         return checkProximity(nodes.get(user.getColor()), latLng);
     }
 
+    //Check to see if you're in an enemy node
     public Node checkEnemyProximity(LatLng latLng) {
         return checkProximity(nodes.get(user.getEnemyColor()), latLng);
     }
 
+    //Check distance from given nodes, used for discovering unknown nodes
     private Node checkProximity(List<Node> nodes, LatLng latLng) {
         if (nodes == null) {
             return null;
@@ -570,15 +576,17 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
+    //Initiates nodeStats window and calls function to populate it
     private void initNodeStates(){
         ArrayAdapter<String> adapter = new ArrayAdapter<> (this,android.R.layout.simple_spinner_item,new ArrayList<>(visitedDevices));
-        // Apply the adapter to the spinner
+        // Apply the adapter to the spinner(dropdown)
         node_selector.setAdapter(adapter);
+        //used a listener to check if new item selected
         node_selector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedFromList = node_selector.getItemAtPosition(position).toString();
-                Log.i("what i want",selectedFromList);
+                //Call the functions that actually populate the NodeStats Window
                 if(!showNodeStats(selectedFromList,"red")) {
                     showNodeStats(selectedFromList, "blue");
                 }
@@ -591,6 +599,7 @@ public class MapsActivity extends FragmentActivity {
         });
 
     }
+    //populates the nodeStats window to inform users about the nodes.
     private Boolean showNodeStats(String selectedFromList, String faction){
         for (Node element : nodes.get(faction)) {
             if (selectedFromList.equals(element.getDevice())) {
@@ -598,16 +607,18 @@ public class MapsActivity extends FragmentActivity {
                 zoomBelow(elementCenter);
                 if (faction == "blue") {
                     faction = "Blue Fedoras";
-                    ownerBar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
+                    ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
+                    //the following attribute is lollipop-only.  Only enable if user is using 21 or later
                     if (Build.VERSION.SDK_INT >= 21) {
-                        ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.BLUE));
+                        ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.RED));
                     }
 
                 } else if (faction == "red") {
                     faction = "Red Bowlers";
-                    ownerBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
+                    ownerBar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
+                    //the following attribute is lollipop-only.  Only enable if user is using 21 or later
                     if (Build.VERSION.SDK_INT >= 21) {
-                        ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.RED));
+                        ownerBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.BLUE));
                     }
                 }
                 nodeStats.setText("\n \n \n" + elementCenter.toString() + "\n" + "Controlling Faction: " + faction + " \n \n Controlling Influence: ");
