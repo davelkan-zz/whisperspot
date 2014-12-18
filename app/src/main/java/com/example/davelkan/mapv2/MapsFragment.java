@@ -333,6 +333,12 @@ public class MapsFragment extends Fragment {
                 leave_intel.setVisibility(View.VISIBLE);
                 take_intel.setVisibility(View.VISIBLE);
                 decrypt_intel.setVisibility(View.GONE);
+                leave_intel.setEnabled(true);
+                take_intel.setEnabled(true);
+                decrypt_intel.setEnabled(true);
+                leave_intel.setTextColor(Color.parseColor("#00FF00"));
+                take_intel.setTextColor(Color.parseColor("#00FF00"));
+                decrypt_intel.setTextColor(Color.parseColor("#00FF00"));
                 slidingView.setBackgroundResource(isBlue ? R.color.blue : R.color.red);
                 layout.showPanel();
                 layout.expandPanel();
@@ -341,28 +347,40 @@ public class MapsFragment extends Fragment {
                 leave_intel.setVisibility(View.VISIBLE);
                 decrypt_intel.setVisibility(View.VISIBLE);
                 take_intel.setVisibility(View.GONE);
+                leave_intel.setEnabled(true);
+                take_intel.setEnabled(true);
+                decrypt_intel.setEnabled(true);
+                leave_intel.setTextColor(Color.parseColor("#00FF00"));
+                take_intel.setTextColor(Color.parseColor("#00FF00"));
+                decrypt_intel.setTextColor(Color.parseColor("#00FF00"));
                 slidingView.setBackgroundResource(isBlue ? R.color.red : R.color.blue);
                 layout.showPanel();
                 layout.expandPanel();
                 break;
-            case 3: // Clicked Ally
+            case 5: // Clicked Ally
                 leave_intel.setVisibility(View.VISIBLE);
                 take_intel.setVisibility(View.VISIBLE);
                 decrypt_intel.setVisibility(View.GONE);
                 leave_intel.setEnabled(false);
                 take_intel.setEnabled(false);
                 decrypt_intel.setEnabled(false);
+                leave_intel.setTextColor(Color.parseColor("#4C4C4C"));
+                take_intel.setTextColor(Color.parseColor("#4C4C4C"));
+                decrypt_intel.setTextColor(Color.parseColor("#4C4C4C"));
                 slidingView.setBackgroundResource(isBlue ? R.color.blue : R.color.red);
                 layout.showPanel();
                 layout.expandPanel();
                 break;
-            case 4: // In Enemy
+            case 6: // In Enemy
                 leave_intel.setVisibility(View.VISIBLE);
                 decrypt_intel.setVisibility(View.VISIBLE);
                 take_intel.setVisibility(View.GONE);
                 leave_intel.setEnabled(false);
                 take_intel.setEnabled(false);
                 decrypt_intel.setEnabled(false);
+                leave_intel.setTextColor(Color.parseColor("#4C4C4C"));
+                take_intel.setTextColor(Color.parseColor("#4C4C4C"));
+                decrypt_intel.setTextColor(Color.parseColor("#4C4C4C"));
                 slidingView.setBackgroundResource(isBlue ? R.color.red : R.color.blue);
                 layout.showPanel();
                 layout.expandPanel();
