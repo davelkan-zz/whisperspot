@@ -35,8 +35,8 @@
             android:layout_width="140dp"
             android:layout_height="64dp"
             android:layout_gravity="right|top"
-            android:text=""
-            android:visibility="invisible" />
+            android:background="@color/red"
+            android:visibility="visible" />
 
         <TextView
             android:id="@+id/popUp"

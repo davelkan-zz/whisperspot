@@ -78,8 +78,6 @@ public class Listeners {
         return (new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.setMapState(4);
-                activity.displayButtons();
                 activity.popUp(activity.getIntel().gatherIntel(activity.getActiveNode()));
             }
         });
@@ -89,8 +87,6 @@ public class Listeners {
         return (new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.setMapState(4);
-                activity.displayButtons();
                 activity.deliverIntel();
             }
         });
@@ -101,8 +97,6 @@ public class Listeners {
         return (new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.setMapState(4);
-                activity.displayButtons();
                 activity.popUp(activity.getIntel().decryptIntel(activity.getActiveNode()));
             }
         });

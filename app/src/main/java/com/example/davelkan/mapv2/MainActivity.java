@@ -131,10 +131,10 @@ public class MainActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-            case R.id.menu_toggle_node_info:
-                setOptionTitle(R.id.menu_toggle_node_info, "Turn Node Info " + (nodeInfo?"ON":"OFF"));
-                mapsFragment.setNodeInfo(!nodeInfo);
-                return true;
+//            case R.id.menu_toggle_node_info:
+//                setOptionTitle(R.id.menu_toggle_node_info, "Turn Node Info " + (nodeInfo?"ON":"OFF"));
+//                mapsFragment.setNodeInfo(!nodeInfo);
+//                return true;
             case R.id.menu_toggle_dev_mode:
                 setOptionTitle(R.id.menu_toggle_dev_mode, "Turn Dev Mode " + (devMode?"ON":"OFF"));
                 setDevMode(!devMode);

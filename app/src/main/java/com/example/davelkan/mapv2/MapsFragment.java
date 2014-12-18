@@ -358,12 +358,16 @@ public class MapsFragment extends Fragment {
         boolean isBlue = mainActivity.preferences.getString("color", "blue").equals("blue");
 
         switch (mapState) {
+            case 0:
+                layout.hidePanel();
+                break;
             case 1: // In Ally match color of node
                 leave_intel.setVisibility(View.VISIBLE);
                 take_intel.setVisibility(View.VISIBLE);
                 decrypt_intel.setVisibility(View.GONE);
                 slidingView.setBackgroundResource(isBlue ? R.color.blue : R.color.red);
                 layout.showPanel();
+                layout.expandPanel();
                 break;
             case 2: // In Enemy
                 leave_intel.setVisibility(View.VISIBLE);
@@ -371,6 +375,29 @@ public class MapsFragment extends Fragment {
                 take_intel.setVisibility(View.GONE);
                 slidingView.setBackgroundResource(isBlue ? R.color.red : R.color.blue);
                 layout.showPanel();
+                layout.expandPanel();
+                break;
+            case 3: // Clicked Ally
+                leave_intel.setVisibility(View.VISIBLE);
+                take_intel.setVisibility(View.VISIBLE);
+                decrypt_intel.setVisibility(View.GONE);
+                leave_intel.setEnabled(false);
+                take_intel.setEnabled(false);
+                decrypt_intel.setEnabled(false);
+                slidingView.setBackgroundResource(isBlue ? R.color.blue : R.color.red);
+                layout.showPanel();
+                layout.expandPanel();
+                break;
+            case 4: // In Enemy
+                leave_intel.setVisibility(View.VISIBLE);
+                decrypt_intel.setVisibility(View.VISIBLE);
+                take_intel.setVisibility(View.GONE);
+                leave_intel.setEnabled(false);
+                take_intel.setEnabled(false);
+                decrypt_intel.setEnabled(false);
+                slidingView.setBackgroundResource(isBlue ? R.color.red : R.color.blue);
+                layout.showPanel();
+                layout.expandPanel();
                 break;
             default:
                 break;

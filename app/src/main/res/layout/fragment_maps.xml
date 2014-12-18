@@ -21,50 +21,23 @@
             android:layout_height="fill_parent"
             android:apiKey="@string/google_maps_key" />
 
-        <!--<Button-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="Deliver Intel"-->
-        <!--android:id="@+id/lvmsg"-->
-        <!--android:visibility="invisible"-->
-        <!--android:layout_gravity="center_horizontal|top" />-->
-
         <TextView
             android:id="@+id/about"
             android:layout_width="140dp"
             android:layout_height="64dp"
             android:layout_gravity="right|top"
-            android:text=""
-            android:visibility="invisible" />
+            android:background="@color/blue"
+            android:visibility="invisible"/>
 
-        <TextView
-            android:id="@+id/popUp"
-            android:layout_width="252dp"
-            android:layout_height="180dp"
-            android:layout_gravity="center"
-            android:background="@color/wallet_holo_blue_light"
-            android:text=""
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:visibility="invisible" />
-
-        <TextView
-            android:id="@+id/nodeStats"
-            android:layout_width="match_parent"
-            android:layout_height="218dp"
-            android:layout_gravity="left|bottom"
-            android:background="@color/material_blue_grey_800"
-            android:text="Medium Text"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:visibility="invisible" />
-
-        <ProgressBar
-            android:id="@+id/ownerBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="10dp"
-            android:visibility="invisible" />
+        <!--<TextView-->
+            <!--android:id="@+id/nodeStats"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="218dp"-->
+            <!--android:layout_gravity="left|bottom"-->
+            <!--android:background="@color/material_blue_grey_800"-->
+            <!--android:text="Medium Text"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+            <!--android:visibility="invisible" />-->
 
         <Spinner
             android:id="@+id/node_selector"
@@ -80,11 +53,12 @@
         android:id="@+id/sliding_up_panel"
         android:layout_width="fill_parent"
         android:layout_height="200dp"
+        android:orientation="vertical"
         android:background="@color/red">
 
         <RelativeLayout
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <View
@@ -121,6 +95,29 @@
                 android:text="@string/decrypt_message" />
 
         </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+            android:id="@+id/popUp"
+            android:layout_width="match_parent"
+            android:padding="20dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@color/wallet_holo_blue_light"
+            android:text=""
+            android:visibility="gone" />
+
+            <ProgressBar
+                android:id="@+id/ownerBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_marginBottom="10dp" />
+
+            </RelativeLayout>
     </LinearLayout>
 
 </com.sothree.slidinguppanel.SlidingUpPanelLayout>
