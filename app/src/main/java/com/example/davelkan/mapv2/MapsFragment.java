@@ -231,7 +231,6 @@ public class MapsFragment extends Fragment {
             mainActivity.preferences.edit().putStringSet("visitedNodes", mainActivity.visitedDevices).apply();
             drawNode(foundNode);
         }
-        mainActivity.toastify("entered " + foundNode.getName());
         mainActivity.firebaseUtils.pullNode(mainActivity.nodes, foundNode);
     }
 

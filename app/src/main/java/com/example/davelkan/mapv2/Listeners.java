@@ -15,7 +15,7 @@ public class Listeners {
         return new GoogleMap.OnMapClickListener() {
             public void onMapClick(LatLng point) {
                 if (point != null) {
-//                    Listeners.onLocationUpdate(activity, fragment, point);
+                    Listeners.onNodeClick(activity, fragment, point);
                 }
             }
         };
@@ -53,6 +53,31 @@ public class Listeners {
         };
     }
 
+    public static void onNodeClick(MainActivity activity, MapsFragment fragment, LatLng latLng) {
+        Node activeNode = fragment.getActiveNode();
+        Node foundNode = activity.nodes.getNodeFromLatLng(latLng);
+
+        if (activeNode != null && activeNode != foundNode) {
+            fragment.setMapState(0);
+        }
+        if (foundNode == null) { // didn't find a node
+            Log.i("LOCATION UPDATE", "NOT IN A NODE");
+            fragment.setMapState(0);
+        } else { // found a node
+            if (foundNode.getColor().equals(fragment.getUser().getColor())) {
+                fragment.setMapState(3);
+            } else {
+                fragment.setMapState(4);
+            }
+            if (!foundNode.equals(fragment.getActiveNode())) {
+                fragment.enterNewNode(foundNode);
+            }
+            Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
+        }
+        fragment.displayButtons();
+    }
+
+
     public static void onLocationUpdate(MainActivity activity, MapsFragment fragment, LatLng latLng) {
         Node activeNode = fragment.getActiveNode();
 
@@ -76,6 +101,7 @@ public class Listeners {
             }
             if (!foundNode.equals(fragment.getActiveNode())) {
                 fragment.enterNewNode(foundNode);
+                activity.toastify("entered " + foundNode.getName());
             }
             Log.i("LOCATION UPDATE", "IN NODE: " + foundNode.getDevice());
             fragment.setActiveNode(foundNode);
