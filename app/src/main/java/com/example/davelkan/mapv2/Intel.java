@@ -10,9 +10,11 @@ import java.util.Random;
  */
 public class Intel {
     private Node node;
+    private User user;
 
-    public Intel() {
+    public Intel(User user) {
         this.node = null;
+        this.user = user;
     }
 
     public Node getNode() {
@@ -29,7 +31,8 @@ public class Intel {
         this.node = null;
     }
 
-    public String gatherIntel(Node node, User user) { // gathering intel at allied node... checking node color may be unnecessary
+    // gathering intel at allied node... checking node color may be unnecessary
+    public String gatherIntel(Node node) {
         if (node == null) {
             return "Return to the node to gather intel!";
         } else if (node.getColor().equalsIgnoreCase(user.getColor())) {
@@ -45,7 +48,7 @@ public class Intel {
         }
     }
 
-    public String returnIntel(Node activeNode, User user, MapsActivity activity) {
+    public String deliverIntel(Node activeNode, MapsActivity activity) {
         if (empty()) {
             return "You poor ignorant fool. You have no Intel to offer.";
         } else if (activeNode == null) {
@@ -62,7 +65,7 @@ public class Intel {
 
 
     //decrypt intel at enemy node
-    public String decryptIntel(Node activeNode, User user) {
+    public String decryptIntel(Node activeNode) {
         if (activeNode == null) {
             return "Return to the node to decrypt intel!";
         } else if (activeNode.getColor().equalsIgnoreCase(user.getEnemyColor())) {
